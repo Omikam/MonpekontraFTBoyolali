@@ -2,133 +2,144 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monitoring Pekerjaan Kontraktor di Fuel Terminal Boyolali</title>
-    <!-- Pustaka SheetJS untuk membaca & menulis file Excel -->
+    <!-- Pustaka SheetJS untuk Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Pustaka Firebase SDK v10 (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ==========================================
+        // KONFIGURASI FIREBASE ANDA
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX7KZrTRNTmGKdZcRVKM6RSe8P_e5BwJ8",
+            authDomain: "monpekontra.firebaseapp.com",
+            databaseURL: "https://monpekontra-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "monpekontra",
+            storageBucket: "monpekontra.firebasestorage.app",
+            messagingSenderId: "908590135448",
+            appId: "1:908590135448:web:43325b3db513280a5f78ed",
+            measurementId: "G-VEZHSVQVQD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.FB_DB = db;
+        window.FB_ref = ref;
+        window.FB_set = set;
+        window.FB_onValue = onValue;
+        window.FB_get = get;
+
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f8; color: #333; margin: 0; padding: 0; }
         
-        .main-wrapper {
-            max-width: 1500px;
-            margin: 0 auto;
-            padding: 15px 15px 30px 15px;
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0b2545; display: flex; justify-content: center; align-items: center;
+            z-index: 9999; padding: 20px; overflow: hidden;
         }
+        .login-bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        .login-card {
+            position: relative; z-index: 2; background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px); padding: 35px 30px; border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .login-card h2 { font-size: 1.5rem; color: #0b2545; margin-bottom: 8px; font-weight: 800; }
+        .login-card p { font-size: 0.88rem; color: #64748b; margin-bottom: 25px; font-weight: 600; }
+        .login-form-group { text-align: left; margin-bottom: 18px; }
+        .login-form-group label { display: block; font-size: 0.8rem; font-weight: bold; color: #475569; margin-bottom: 6px; text-transform: uppercase; }
+        .login-input {
+            width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px;
+            font-size: 0.95rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .login-input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15); }
+        .login-btn {
+            width: 100%; padding: 11px; background: #27ae60; color: white; border: none;
+            border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s;
+        }
+        .login-btn:hover { background: #219653; }
+        .login-error { color: #e74c3c; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: 600; }
+        .login-info-hint { margin-top: 15px; font-size: 0.78rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 10px; text-align: left; }
 
+        .main-wrapper { max-width: 1500px; margin: 0 auto; padding: 20px; }
         .header-banner-wrapper {
-            position: relative;
-            width: 100%;
-            background-color: #0b2545; 
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .banner-flex-container {
-            display: flex;
-            align-items: center;
-            width: 100%;
+            position: relative; width: 100%; min-height: 160px;
             background: linear-gradient(135deg, #0b2545 0%, #133863 100%);
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            margin-bottom: 15px; overflow: hidden; display: flex; align-items: center;
         }
-
-        .header-banner-img {
-            width: 38%;
-            height: 180px;
-            object-fit: cover; 
-            object-position: center;
-            display: block;
-            border-top-left-radius: 12px;
-            border-bottom-left-radius: 12px;
+        .header-banner-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.25; z-index: 1; }
+        .banner-content-overlay {
+            position: relative; z-index: 2; width: 100%; padding: 22px 30px; color: white;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
         }
-
-        .banner-content-area {
-            flex: 1;
-            padding: 15px 25px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .header-title h1 { font-size: 1.35rem; font-weight: 800; margin-bottom: 4px; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .header-title p { font-size: 0.88rem; color: #ffdd57; font-weight: 700; }
-
-        .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .live-clock { background: rgba(0, 0, 0, 0.4); padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
-        
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .header-title h1 { font-size: 1.45rem; font-weight: 800; margin-bottom: 5px; line-height: 1.3; text-shadow: 0 2px 5px rgba(0,0,0,0.6); }
+        .header-title p { font-size: 0.9rem; color: #ffdd57; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+        .live-clock { background: rgba(0, 0, 0, 0.55); padding: 5px 12px; border-radius: 6px; font-size: 0.78rem; border: 1px solid rgba(255,255,255,0.25); white-space: nowrap; backdrop-filter: blur(4px); }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .upload-btn, .action-btn {
-            background: #27ae60; color: white; padding: 7px 12px; border-radius: 6px;
-            cursor: pointer; font-size: 0.8rem; font-weight: 600; border: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: background 0.2s;
-            display: flex; align-items: center; gap: 5px; white-space: nowrap; text-decoration: none;
+            background: #27ae60; color: white; padding: 7px 14px; border-radius: 6px;
+            cursor: pointer; font-size: 0.85rem; font-weight: 600; border: none;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3); transition: background 0.2s, transform 0.1s;
+            display: flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none;
         }
-        .upload-btn:hover, .action-btn:hover { background: #219653; }
+        .upload-btn:hover, .action-btn:hover { background: #219653; transform: translateY(-1px); }
         .action-btn.reset-btn { background: #e74c3c; }
         .action-btn.reset-btn:hover { background: #c0392b; }
         .action-btn.download-btn { background: #2980b9; }
         .action-btn.download-btn:hover { background: #2471a3; }
+        .action-btn.logout-btn { background: #7f8c8d; }
+        .action-btn.logout-btn:hover { background: #707b7c; }
         .upload-btn input { display: none; }
 
-        /* Responsif untuk Tampilan HP Apapun */
-        @media (max-width: 900px) { 
-            .banner-flex-container { flex-direction: column; align-items: stretch; }
-            .header-banner-img { width: 100%; height: 160px; border-radius: 0; }
-            .banner-content-area { padding: 15px; flex-direction: column; align-items: flex-start; }
+        .running-text-container {
+            background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+            padding: 10px 15px; margin-bottom: 25px; display: flex; align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow: hidden;
+        }
+        .running-text-badge {
+            background: #f59e0b; color: white; font-size: 0.75rem; font-weight: 800;
+            padding: 4px 10px; border-radius: 4px; text-transform: uppercase; margin-right: 15px; white-space: nowrap; flex-shrink: 0;
+        }
+        .running-text-marquee { width: 100%; overflow: hidden; white-space: nowrap; }
+        .running-text-marquee marquee { font-size: 0.88rem; font-weight: 600; color: #b45309; }
+
+        @media (max-width: 900px) {
+            .banner-content-overlay { padding: 15px 20px; flex-direction: column; align-items: flex-start; }
             .header-actions { align-items: stretch; width: 100%; margin-top: 5px; }
-            .btn-group { display: grid; grid-template-columns: 1fr; width: 100%; }
-            .upload-btn, .action-btn { justify-content: center; padding: 10px; font-size: 0.85rem; }
+            .btn-group { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 6px; }
+            .upload-btn, .action-btn { justify-content: center; padding: 9px 10px; font-size: 0.8rem; }
             .header-title h1 { font-size: 1.15rem; }
+            .main-wrapper { padding: 10px; }
         }
-        
-        .main-grid { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
-        
+
+        .top-section-grid { display: grid; grid-template-columns: 420px 1fr; gap: 25px; margin-bottom: 25px; }
+        @media (max-width: 1024px) { .top-section-grid { grid-template-columns: 1fr; } }
+
         .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #eaeaea; margin-bottom: 20px; }
-        .card-header { padding: 12px 18px; background: #fafbfc; border-bottom: 1px solid #eee; font-weight: 600; font-size: 0.95rem; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
-        .card-body { padding: 15px; }
-        
-        .map-container { 
-            position: relative; 
-            width: 100%; 
-            background: #fff; 
-            border-radius: 6px; 
-            overflow: hidden; 
-            border: 1px solid #ddd; 
-            user-select: none;
-            touch-action: none;
-        }
+        .card-header { padding: 15px 20px; background: #fafbfc; border-bottom: 1px solid #eee; font-weight: 600; font-size: 1rem; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 20px; }
+
+        .map-container { position: relative; width: 100%; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; user-select: none; }
         .map-container img { width: 100%; display: block; height: auto; pointer-events: none; }
-        
         .map-pin {
-            position: absolute; 
-            width: 28px; 
-            height: 28px; 
-            border-radius: 50%;
-            border: 2px solid white; 
-            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
-            cursor: grab; 
-            transform: translate(-50%, -50%);
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 10px; 
-            font-weight: bold; 
-            color: white;
-            z-index: 10;
-            touch-action: none;
+            position: absolute; width: 32px; height: 32px; border-radius: 50%;
+            border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.5); cursor: grab;
+            transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold; color: white; z-index: 10;
         }
         .map-pin:active { cursor: grabbing; }
-        .map-pin.highlight {
-            box-shadow: 0 0 15px #f39c12;
-            border: 3px solid #fff;
-            animation: pulse-pin 1.2s infinite;
-            z-index: 30;
-        }
+        .map-pin.highlight { box-shadow: 0 0 15px #f39c12; border: 3px solid #fff; animation: pulse-pin 1.2s infinite; z-index: 30; }
         @keyframes pulse-pin {
             0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.8); }
             70% { box-shadow: 0 0 0 12px rgba(243, 156, 18, 0); }
@@ -136,71 +147,47 @@
         }
 
         .coordinate-helper {
-            margin-top: 10px; background: #eef2f7; padding: 8px 10px; border-radius: 6px;
-            font-size: 0.78rem; color: #2c3e50; border: 1px dashed #cbd5e1; display: flex;
-            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;
+            margin-top: 10px; background: #eef2f7; padding: 10px 12px; border-radius: 6px;
+            font-size: 0.82rem; color: #2c3e50; border: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center;
         }
         .coordinate-helper span { font-weight: bold; color: #d97706; }
 
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        .data-table th { background: #f8f9fa; color: #4a5568; font-weight: 600; text-align: left; padding: 10px 12px; border-bottom: 2px solid #edf2f7; }
-        .data-table td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; vertical-align: middle; color: #2d3748; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .data-table th { background: #f8f9fa; color: #4a5568; font-weight: 600; text-align: left; padding: 12px 15px; border-bottom: 2px solid #edf2f7; }
+        .data-table td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; vertical-align: middle; color: #2d3748; }
 
-        .list-container { display: flex; flex-direction: column; gap: 5px; }
-        .list-item-row { display: flex; justify-content: space-between; align-items: center; }
-        
         .editable-input {
-            width: 100%;
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            color: #2d3748;
-            background: #ffffff;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px;
+            font-size: 0.85rem; color: #2d3748; background: #ffffff; outline: none; transition: border-color 0.2s;
         }
-        .editable-input:focus {
-            border-color: #3182ce;
-            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
-        }
-        .input-jumlah { width: 60px; text-align: center; font-weight: bold; }
+        .editable-input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15); }
+        .input-jumlah { width: 70px; text-align: center; font-weight: bold; }
 
         .uraian-textarea {
-            width: 100%;
-            min-height: 42px;
-            padding: 5px 8px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            color: #2d3748;
-            background: #ffffff;
-            resize: vertical;
-            outline: none;
+            width: 100%; min-height: 38px; max-height: 200px; padding: 6px 10px; border: 1px solid #cbd5e1;
+            border-radius: 6px; font-size: 0.85rem; color: #2d3748; background: #ffffff; resize: none; overflow: hidden; outline: none; line-height: 1.4;
         }
         .uraian-textarea:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15); }
-        
-        .status-dropdown {
-            width: 100%;
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: bold;
-            border: 1px solid #cbd5e1;
-            cursor: pointer;
-            outline: none;
-            text-align: center;
-        }
 
+        .status-dropdown { width: 100%; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; border: 1px solid #cbd5e1; cursor: pointer; outline: none; text-align: center; }
         .status-sudah { background-color: #d4edda !important; color: #155724 !important; border-color: #c3e6cb !important; }
         .status-belum { background-color: #f8d7da !important; color: #721c24 !important; border-color: #f5c6cb !important; }
 
-        .pendukung-select {
-            width: 100%;
-            padding: 4px 6px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;
-            border: 1px solid #cbd5e1; cursor: pointer; outline: none;
-        }
+        .sika-select-item { width: 100%; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; border: 1px solid #cbd5e1; cursor: pointer; outline: none; margin-bottom: 5px; }
+        .sika-select-item:last-child { margin-bottom: 0; }
+        
+        .sika-panas { background-color: #fef3c7 !important; color: #b45309 !important; border-color: #fde68a !important; }
+        .sika-dingin { background-color: #e0f2fe !important; color: #0369a1 !important; border-color: #bae6fd !important; }
+        .sika-ketinggian { background-color: #dcfce7 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
+        .sika-ruang-terbatas { background-color: #f3e8ff !important; color: #7e22ce !important; border-color: #e9d5ff !important; }
+        .sika-perairan { background-color: #fae8ff !important; color: #a21caf !important; border-color: #f5d0fe !important; }
+        .sika-penggalian { background-color: #ffedd5 !important; color: #c2410c !important; border-color: #fed7aa !important; }
+        .sika-default { background-color: #f1f5f9 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
 
+        .global-info-select {
+            width: 100%; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+            border: 1px solid rgba(0,0,0,0.15); cursor: pointer; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
         .color-theme-1 { background-color: #e0f2fe !important; color: #0369a1 !important; }
         .color-theme-2 { background-color: #f3e8ff !important; color: #7e22ce !important; }
         .color-theme-3 { background-color: #fef3c7 !important; color: #b45309 !important; }
@@ -211,149 +198,300 @@
         .contractor-row:hover { background-color: #f1f5f9; }
         .contractor-row.highlight-row { background-color: #fef3c7 !important; }
 
-        .contractor-name-wrapper { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-        .dot-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; cursor: pointer; flex-shrink: 0; }
-        
+        .contractor-name-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .dot-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer; flex-shrink: 0; }
         .color-Green { background-color: #2ecc71; }
         .color-Blue { background-color: #3498db; }
         .color-Red { background-color: #e74c3c; }
         .color-Brown { background-color: #d35400; }
         .color-Violet { background-color: #9b59b6; }
         .color-Yellow { background-color: #f1c40f; }
-        
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-        .info-box { background: #f8f9fa; padding: 8px 12px; border-radius: 6px; border-left: 4px solid #0066cc; }
-        .info-box label { font-size: 0.7rem; color: #718096; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 2px; }
-        .info-box div { font-size: 0.85rem; font-weight: 600; color: #2d3748; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .info-box label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 8px; }
 
         .welcome-container-full {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            border: 1px solid #eaeaea;
-            margin: 10px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            grid-column: 1 / -1; text-align: center; padding: 80px 30px; background: white;
+            border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #eaeaea; margin: 10px 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .welcome-icon { font-size: 3rem; margin-bottom: 15px; }
-        .welcome-container-full h2 { font-size: 1.6rem; font-weight: 700; color: #0b2545; margin-bottom: 10px; }
-        .welcome-container-full p { font-size: 0.95rem; color: #64748b; max-width: 600px; line-height: 1.5; margin-bottom: 20px; }
-        .welcome-badge { background: #eef2f7; color: #1e293b; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid #cbd5e1; }
+        .welcome-icon { font-size: 3.5rem; margin-bottom: 20px; }
+        .welcome-container-full h2 { font-size: 2rem; font-weight: 700; color: #0b2545; margin-bottom: 12px; }
+        .welcome-container-full p { font-size: 1.1rem; color: #64748b; max-width: 650px; line-height: 1.6; margin-bottom: 25px; }
+        .welcome-badge { background: #eef2f7; color: #1e293b; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; border: 1px solid #cbd5e1; }
     </style>
 </head>
 <body>
 
+    <div id="loginOverlay">
+        <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="login-bg-img" onerror="this.style.display='none'">
+        <div class="login-card">
+            <h2>Login MonPeKontra</h2>
+            <p>Fuel Terminal Boyolali </p>
+            <form onsubmit="handleLogin(event)">
+                <div class="login-form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUser" class="login-input" placeholder="Masukkan username" required>
+                </div>
+                <div class="login-form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" class="login-input" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="login-btn">Masuk</button>
+                <div id="loginError" class="login-error">Username atau password salah!</div>
+            </form>
+            <div class="login-info-hint">
+                <b>Info Akun:</b><br>
+                • Admin (Editor & Upload): <code>admin</code> / <code>***</code><br>
+                • Vendor (Edit Kontraktor & Pekerjaan): <code>vendor</code> / <code>2701</code><br>
+                • Tamu (Hanya Lihat): <code>tamu</code> / <code>***</code>
+            </div>
+        </div>
+    </div>
+
     <div class="main-wrapper">
-
         <div class="header-banner-wrapper">
-            <div class="banner-flex-container">
-                <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="header-banner-img" onerror="this.style.display='none'">
-                <div class="banner-content-area">
-                    <div class="header-title">
-                        <h1>Monitoring Pekerjaan Kontraktor di Fuel Terminal Boyolali</h1>
-                        <p id="totalPekerjaText">Total Pekerja Aktif: -</p>
+            <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="header-banner-bg" onerror="this.style.display='none'">
+            <div class="banner-content-overlay">
+                <div class="header-title">
+                    <h1>Monitoring Pekerjaan Kontraktor di Fuel Terminal Boyolali</h1>
+                    <p id="totalPekerjaText">Total Pekerja Aktif: -</p>
+                </div>
+                <div class="header-actions">
+                    <div class="live-clock" id="liveClock">Memuat Waktu...</div>
+                    <div class="btn-group">
+                        <button class="action-btn download-btn" id="downloadExcelBtn" onclick="downloadUpdatedExcel()" style="display:none;">📥 Download Excel</button>
+                        <button class="action-btn reset-btn" id="resetPosBtn" onclick="resetAllPositions()" style="display:none;">🔄 Reset Pin</button>
+                        <label class="upload-btn" id="uploadExcelWrapper" style="display:none;">
+                            📂 Update Excel
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)">
+                        </label>
+                        <button class="action-btn logout-btn" onclick="handleLogout()">🚪 Logout</button>
                     </div>
-                    <div class="header-actions">
-                        <div class="live-clock" id="liveClock">Memuat Waktu...</div>
-                        <div class="btn-group">
-                            <button class="action-btn download-btn" id="downloadExcelBtn" onclick="downloadUpdatedExcel()" style="display:none;" title="Download Excel dengan data terbaru">📥 Download Excel</button>
-                            <button class="action-btn reset-btn" id="resetPosBtn" onclick="resetAllPositions()" style="display:none;" title="Reset posisi pin ke Excel">🔄 Reset Pin</button>
-                            <label class="upload-btn">
-                                📂 Update Excel
-                                <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)">
-                            </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="running-text-container">
+            <div class="running-text-badge">📢 INFO</div>
+            <div class="running-text-marquee">
+                <marquee scrollamount="5" scrolldelay="60">
+                    Selamat Datang di Sistem Monitoring Pekerjaan Kontraktor Fuel Terminal Boyolali — Pastikan seluruh izin SIKA utama dan pendukung telah divalidasi sebelum memulai pekerjaan di area site. Utamakan Keselamatan dan Kesehatan Kerja (K3) dalam setiap aktivitas pekerjaan Anda! #Sauto #SafetyUnTolerance
+                </marquee>
+            </div>
+        </div>
+
+        <div class="welcome-container-full" id="welcomeMessageCard">
+            <div class="welcome-icon">📊</div>
+            <h2 id="welcomeTitleText">Memuat Data dari Cloud...</h2>
+            <p id="welcomeDescText">Menghubungkan ke database Firebase Realtime Database.</p>
+            <div class="welcome-badge" id="welcomeStatusBadge">Status: Menghubungkan</div>
+        </div>
+
+        <div class="top-section-grid" id="topSectionGrid" style="display: none;">
+            <div class="card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <span>Area Lokasi Kerja</span>
+                    <span id="mapInstructionHint" style="font-size: 0.75rem; color: #718096;">💡 Geser pin untuk ubah posisi</span>
+                </div>
+                <div class="card-body">
+                    <div class="map-container" id="mapWrapper">
+                        <img src="peta_site.jpg" alt="Peta Site" id="siteMapImg" onerror="this.src='https://via.placeholder.com/600x450?text=Peta+Site+Belum+Tersedia'">
+                    </div>
+                    <div class="coordinate-helper">
+                        <span>Status Pin:</span> <strong id="coordResult">Geser atau klik pin di atas</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 0;">
+                <div class="card-header">Informasi GSI, SI & AT</div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-box">
+                            <label>GSI</label>
+                            <select id="infoGsiSelect" class="global-info-select" onchange="updateGlobalSelectStyle('gsi', this)"></select>
+                        </div>
+                        <div class="info-box">
+                            <label>SI</label>
+                            <select id="infoSiSelect" class="global-info-select" onchange="updateGlobalSelectStyle('si', this)"></select>
+                        </div>
+                        <div class="info-box">
+                            <label>AT</label>
+                            <select id="infoAtSelect" class="global-info-select" onchange="updateGlobalSelectStyle('at', this)"></select>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="main-grid">
-            
-            <div class="welcome-container-full" id="welcomeMessageCard">
-                <div class="welcome-icon">📊</div>
-                <h2>Selamat Datang di Monitoring Pekerjaan Kontraktor Fuel Terminal Boyolali</h2>
-                <p>Sistem ini memantau aktivitas, lokasi kerja, serta progress harian kontraktor. Silakan klik tombol <b>"📂 Update Excel"</b> di atas untuk memuat data.</p>
-                <div class="welcome-badge">Status: Menunggu Unggahan Data Excel</div>
-            </div>
-
-            <div id="mapCardSection" style="display: none;">
-                <div class="card">
-                    <div class="card-header">
-                        <span>Area Lokasi Kerja</span>
-                        <span style="font-size: 0.72rem; color: #718096;">💡 Geser pin di peta</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="map-container" id="mapWrapper">
-                            <img src="peta_site.jpg" alt="Peta Site" id="siteMapImg" onerror="this.src='https://via.placeholder.com/600x450?text=Peta+Site+Belum+Tersedia'">
-                        </div>
-                        <div class="coordinate-helper">
-                            <span>Status Pin:</span> <strong id="coordResult">Geser pin di atas untuk memindahkan</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">Informasi GSI, SI & AT</div>
-                    <div class="card-body">
-                        <div class="info-grid">
-                            <div class="info-box"><label>GSI</label><div id="infoGsi">-</div></div>
-                            <div class="info-box"><label>SI</label><div id="infoSi">-</div></div>
-                            <div class="info-box"><label>AT</label><div id="infoAt">-</div></div>
-                        </div>
-                    </div>
+        <div id="dataTableSection" style="display: none;">
+            <div class="card">
+                <div class="card-header">Daftar & Uraian Pekerjaan Kontraktor</div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Nama Kontraktor & Pekerja</th>
+                                <th style="width: 27%;">Uraian Pekerjaan</th>
+                                <th style="width: 14%; text-align: center;">Izin SIKA Utama</th>
+                                <th style="width: 22%;">Izin SIKA Pendukung</th>
+                                <th style="width: 12%; text-align: center;">Validasi H-1</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
                 </div>
             </div>
-
-            <div id="dataTableSection" style="display: none;">
-                <div class="card">
-                    <div class="card-header">Daftar & Uraian Pekerjaan Kontraktor</div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 25%;">Nama Kontraktor & Pekerja</th>
-                                    <th style="width: 27%;">Uraian Pekerjaan</th>
-                                    <th style="width: 14%; text-align: center;">Izin Utama</th>
-                                    <th style="width: 22%;">Izin Pendukung</th>
-                                    <th style="width: 12%; text-align: center;">Validasi H-1</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
         </div>
-
     </div>
 
     <script>
+        const CREDENTIALS = {
+            "admin": { pass: "123", role: "admin" },
+            "vendor": { pass: "2701", role: "vendor" },
+            "tamu": { pass: "123", role: "tamu" }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('ft_boyolali_logged_in') === 'true') {
+                const role = localStorage.getItem('ft_boyolali_role') || 'admin';
+                applyUserRoleUI(role);
+                document.getElementById('loginOverlay').style.display = 'none';
+            }
+        });
+
+        window.addEventListener('firebase-ready', () => {
+            initRealtimeSync();
+        });
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim().toLowerCase();
+            const pass = document.getElementById('loginPass').value.trim();
+            const errEl = document.getElementById('loginError');
+
+            if (CREDENTIALS[user] && CREDENTIALS[user].pass === pass) {
+                const role = CREDENTIALS[user].role;
+                localStorage.setItem('ft_boyolali_logged_in', 'true');
+                localStorage.setItem('ft_boyolali_role', role);
+                applyUserRoleUI(role);
+                document.getElementById('loginOverlay').style.display = 'none';
+                errEl.style.display = 'none';
+            } else {
+                errEl.style.display = 'block';
+            }
+        }
+
+        function applyUserRoleUI(role) {
+            const uploadWrapper = document.getElementById('uploadExcelWrapper');
+            const resetBtn = document.getElementById('resetPosBtn');
+            const downloadBtn = document.getElementById('downloadExcelBtn');
+            const mapHint = document.getElementById('mapInstructionHint');
+            const gsiSelect = document.getElementById('infoGsiSelect');
+            const siSelect = document.getElementById('infoSiSelect');
+            const atSelect = document.getElementById('infoAtSelect');
+            
+            if (role === 'tamu') {
+                if (uploadWrapper) uploadWrapper.style.display = 'none';
+                if (resetBtn) resetBtn.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'none';
+                if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail pekerjaan';
+                document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Tamu (Viewer)</b>. Data diperbarui secara otomatis dari cloud.';
+                if(gsiSelect) gsiSelect.disabled = true;
+                if(siSelect) siSelect.disabled = true;
+                if(atSelect) atSelect.disabled = true;
+            } else if (role === 'vendor') {
+                if (uploadWrapper) uploadWrapper.style.display = 'none';
+                if (resetBtn) resetBtn.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'none'; // Tombol download disembunyikan untuk vendor
+                if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail pekerjaan';
+                document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Vendor</b>. Anda dapat mengubah Nama Kontraktor, Pekerja, Area, dan Uraian Pekerjaan.';
+                if(gsiSelect) gsiSelect.disabled = true;
+                if(siSelect) siSelect.disabled = true;
+                if(atSelect) atSelect.disabled = true;
+            } else {
+                if (uploadWrapper) uploadWrapper.style.display = 'flex';
+                if (downloadBtn) downloadBtn.style.display = 'flex'; // Tombol download ditampilkan untuk admin
+                if (mapHint) mapHint.innerText = '💡 Geser pin untuk memindahkan posisi';
+                document.getElementById('welcomeDescText').innerHTML = 'Sistem monitoring aktif. Silakan upload Excel atau ubah data langsung.';
+                if(gsiSelect) gsiSelect.disabled = false;
+                if(siSelect) siSelect.disabled = false;
+                if(atSelect) atSelect.disabled = false;
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('ft_boyolali_logged_in');
+            localStorage.removeItem('ft_boyolali_role');
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+
         let globalContractorData = [];
-        let customPositions = JSON.parse(localStorage.getItem('ft_boyolali_pin_pos') || '{}');
-        let savedPendukungSelections = JSON.parse(localStorage.getItem('ft_boyolali_pendukung_sel') || '{}');
-        let savedUraianTexts = JSON.parse(localStorage.getItem('ft_boyolali_uraian_text') || '{}');
-        let savedKontraktorNames = JSON.parse(localStorage.getItem('ft_boyolali_kontraktor_name') || '{}');
-        let savedJumlahPekerja = JSON.parse(localStorage.getItem('ft_boyolali_jumlah_pekerja') || '{}');
-        let savedAreaKerja = JSON.parse(localStorage.getItem('ft_boyolali_area_kerja') || '{}');
-        let savedIzinUtama = JSON.parse(localStorage.getItem('ft_boyolali_izin_utama') || '{}');
-        let savedValidasiH1 = JSON.parse(localStorage.getItem('ft_boyolali_validasi_h1') || '{}');
+        let liveDatabaseState = {};
+        let isUserTypingLocally = false;
+        let globalAvailableSikaOptions = [
+            "SIKA Panas (Hot Work Permit)", 
+            "SIKA Dingin (Cold Work Permit)", 
+            "SIKA Bekerja di Ketinggian (Working at Height)", 
+            "SIKA Ruang Terbatas (Confined Space Permit)", 
+            "SIKA Pekerjaan Perairan (Water Based)", 
+            "SIKA Penggalian (Excavation Permit)"
+        ];
+
+        function initRealtimeSync() {
+            const dbRef = window.FB_ref(window.FB_DB, 'monitoring_data');
+            window.FB_onValue(dbRef, (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    liveDatabaseState = val;
+                    if (val.rawJson) {
+                        globalContractorData = val.rawJson;
+                        extractSikaOptions(globalContractorData);
+                        if (!isUserTypingLocally) {
+                            processAndRender(globalContractorData);
+                        }
+                    }
+                } else {
+                    document.getElementById('welcomeMessageCard').style.display = 'flex';
+                    document.getElementById('welcomeTitleText').innerText = "Belum Ada Data di Cloud";
+                    document.getElementById('welcomeDescText').innerText = "Silakan login sebagai admin dan klik tombol 'Update Excel' untuk memuat data pertama kali.";
+                    document.getElementById('welcomeStatusBadge').innerText = "Status: Menunggu Upload Admin";
+                }
+            });
+        }
+
+        function extractSikaOptions(rawJson) {
+            let optionsSet = new Set(globalAvailableSikaOptions);
+            rawJson.forEach(row => {
+                const val = row['Izin Kerja Pendukung'];
+                if (val) {
+                    String(val).split(/,|\n|;/).forEach(item => {
+                        const clean = item.trim();
+                        if (clean && clean !== '-') optionsSet.add(clean);
+                    });
+                }
+            });
+            globalAvailableSikaOptions = Array.from(optionsSet);
+        }
+
+        function saveStateToCloud(updatedKey, updatedValue) {
+            const currentRole = localStorage.getItem('ft_boyolali_role');
+            if (currentRole === 'tamu') return;
+            liveDatabaseState[updatedKey] = updatedValue;
+            window.FB_set(window.FB_ref(window.FB_DB, 'monitoring_data'), liveDatabaseState);
+        }
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('liveClock').innerText = now.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB';
+            document.getElementById('liveClock').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB';
         }
         setInterval(updateClock, 1000);
         updateClock();
 
         function handleExcelUpload(event) {
+            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
             const file = event.target.files[0];
             if (!file) return;
 
@@ -362,93 +500,177 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
                     globalContractorData = json;
-                    processAndRender(json);
-                    alert("✅ Data Excel berhasil dimuat!");
-                } catch (error) {
-                    console.error(error);
+                    extractSikaOptions(json);
+                    saveStateToCloud('rawJson', json);
+                    saveStateToCloud('customPositions', {});
+                    saveStateToCloud('edits', {});
+                    alert("✅ Data berhasil di-upload ke Cloud & disinkronkan secara real-time!");
+                } catch (err) {
+                    console.error(err);
                     alert("❌ Gagal membaca file Excel.");
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
+        function getThemeClass(val) {
+            let hash = 0;
+            const str = String(val).trim();
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `color-theme-${(Math.abs(hash) % 5) + 1}`;
+        }
+
+        function getSikaClass(val) {
+            if (!val) return 'sika-default';
+            const lower = val.toLowerCase();
+            if (lower.includes('panas') || lower.includes('hot')) return 'sika-panas';
+            if (lower.includes('dingin') || lower.includes('cold')) return 'sika-dingin';
+            if (lower.includes('ketinggian') || lower.includes('height')) return 'sika-ketinggian';
+            if (lower.includes('ruang terbatas') || lower.includes('confined')) return 'sika-ruang-terbatas';
+            if (lower.includes('perairan') || lower.includes('water')) return 'sika-perairan';
+            if (lower.includes('penggalian') || lower.includes('excavation')) return 'sika-penggalian';
+            return 'sika-default';
+        }
+
         function focusContractor(index) {
             document.querySelectorAll('.map-pin').forEach(p => p.classList.remove('highlight'));
             document.querySelectorAll('.contractor-row').forEach(r => r.classList.remove('highlight-row'));
-
             const targetPin = document.getElementById(`pin-${index}`);
             const targetRow = document.getElementById(`row-${index}`);
-
-            if (targetPin) {
-                targetPin.classList.add('highlight');
-                targetPin.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-            }
+            if (targetPin) targetPin.classList.add('highlight');
             if (targetRow) {
                 targetRow.classList.add('highlight-row');
                 targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
 
-        function getThemeClass(val) {
-            let hash = 0;
-            const str = String(val).trim();
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        function updateFieldEdit(index, fieldName, value) {
+            isUserTypingLocally = false;
+            const role = localStorage.getItem('ft_boyolali_role');
+            if (role === 'tamu') return;
+            
+            if (role === 'vendor') {
+                const allowedVendorFields = ['kontraktor', 'jumlah_pekerja', 'area', 'uraian'];
+                if (!allowedVendorFields.includes(fieldName)) return;
             }
-            const themeIndex = (Math.abs(hash) % 5) + 1;
-            return `color-theme-${themeIndex}`;
+
+            if (!liveDatabaseState.edits) liveDatabaseState.edits = {};
+            if (!liveDatabaseState.edits[index]) liveDatabaseState.edits[index] = {};
+            liveDatabaseState.edits[index][fieldName] = value;
+            saveStateToCloud('edits', liveDatabaseState.edits);
+            if(fieldName === 'jumlah_pekerja') recalculateTotalPekerja();
         }
 
-        function updateSelectColor(selectElement, rowIdx, lineIdx) {
-            selectElement.className = 'pendukung-select ' + getThemeClass(selectElement.value);
-            if (!savedPendukungSelections[rowIdx]) savedPendukungSelections[rowIdx] = {};
-            savedPendukungSelections[rowIdx][lineIdx] = selectElement.value;
-            localStorage.setItem('ft_boyolali_pendukung_sel', JSON.stringify(savedPendukungSelections));
+        function updateSikaPendukungItem(rowIndex, sikaIndex, value) {
+            isUserTypingLocally = false;
+            const role = localStorage.getItem('ft_boyolali_role');
+            if (role === 'tamu' || role === 'vendor') return;
+            
+            const row = globalContractorData[rowIndex] || {};
+            const edits = liveDatabaseState.edits || {};
+            let currentVal = edits[rowIndex]?.izin_pendukung !== undefined ? edits[rowIndex].izin_pendukung : (row['Izin Kerja Pendukung'] || '');
+            
+            let sikaArray = String(currentVal).split(/\r?\n|,|;/).map(s => s.trim()).filter(s => s !== '' && s !== '-');
+            while(sikaArray.length <= sikaIndex) {
+                sikaArray.push('-');
+            }
+            sikaArray[sikaIndex] = value;
+            let combinedVal = sikaArray.join('\n');
+            
+            if (!liveDatabaseState.edits) liveDatabaseState.edits = {};
+            if (!liveDatabaseState.edits[rowIndex]) liveDatabaseState.edits[rowIndex] = {};
+            liveDatabaseState.edits[rowIndex]['izin_pendukung'] = combinedVal;
+            
+            saveStateToCloud('edits', liveDatabaseState.edits);
         }
 
-        function updateStatusDropdownStyle(selectEl) {
-            const val = selectEl.value.toUpperCase();
-            selectEl.className = 'status-dropdown ' + (val === 'SUDAH' ? 'status-sudah' : 'status-belum');
+        function markTypingStart() {
+            isUserTypingLocally = true;
         }
 
-        function updateIzinUtamaSelect(selectEl, rowIdx) {
-            updateStatusDropdownStyle(selectEl);
-            savedIzinUtama[rowIdx] = selectEl.value;
-            localStorage.setItem('ft_boyolali_izin_utama', JSON.stringify(savedIzinUtama));
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight + 2) + 'px';
         }
 
-        function updateValidasiH1Select(selectEl, rowIdx) {
-            updateStatusDropdownStyle(selectEl);
-            savedValidasiH1[rowIdx] = selectEl.value;
-            localStorage.setItem('ft_boyolali_validasi_h1', JSON.stringify(savedValidasiH1));
+        function updateGlobalInfo(type, val) {
+            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (!liveDatabaseState.globalInfo) liveDatabaseState.globalInfo = {};
+            liveDatabaseState.globalInfo[type] = val;
+            saveStateToCloud('globalInfo', liveDatabaseState.globalInfo);
         }
 
-        function updateUraianText(textareaElement, rowIdx) {
-            if (!savedUraianTexts[rowIdx]) savedUraianTexts[rowIdx] = {};
-            savedUraianTexts[rowIdx] = textareaElement.value;
-            localStorage.setItem('ft_boyolali_uraian_text', JSON.stringify(savedUraianTexts));
-            renderPendukungColumn(rowIdx);
+        function updateGlobalSelectStyle(type, el) {
+            el.className = 'global-info-select ' + getThemeClass(el.value);
+            updateGlobalInfo(type, el.value);
         }
 
-        function updateKontraktorName(inputElement, rowIdx) {
-            savedKontraktorNames[rowIdx] = inputElement.value;
-            localStorage.setItem('ft_boyolali_kontraktor_name', JSON.stringify(savedKontraktorNames));
+        function updatePinPosition(index, top, left) {
+            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
+            liveDatabaseState.customPositions[index] = { top, left };
+            saveStateToCloud('customPositions', liveDatabaseState.customPositions);
+            document.getElementById('resetPosBtn').style.display = 'flex';
         }
 
-        function updateAreaKerjaInput(inputElement, rowIdx) {
-            savedAreaKerja[rowIdx] = inputElement.value;
-            localStorage.setItem('ft_boyolali_area_kerja', JSON.stringify(savedAreaKerja));
+        function resetAllPositions() {
+            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (confirm("Reset posisi pin?")) {
+                liveDatabaseState.customPositions = {};
+                saveStateToCloud('customPositions', {});
+                document.getElementById('resetPosBtn').style.display = 'none';
+            }
         }
 
-        function updateJumlahPekerjaInput(inputElement, rowIdx) {
-            savedJumlahPekerja[rowIdx] = parseInt(inputElement.value) || 0;
-            localStorage.setItem('ft_boyolali_jumlah_pekerja', JSON.stringify(savedJumlahPekerja));
-            recalculateTotalPekerja();
+        // Fungsi Download Excel yang Sinkron Sepenuhnya dengan Kondisi di Web
+        function downloadUpdatedExcel() {
+            const currentRole = localStorage.getItem('ft_boyolali_role');
+            if (currentRole === 'vendor' || currentRole === 'tamu') {
+                alert("❌ Anda tidak memiliki hak akses untuk mendownload file Excel.");
+                return;
+            }
+            
+            if (!globalContractorData.length) return;
+
+            const edits = liveDatabaseState.edits || {};
+            const customPositions = liveDatabaseState.customPositions || {};
+            const globalInfo = liveDatabaseState.globalInfo || {};
+
+            let updatedData = globalContractorData.map((row, idx) => {
+                let newRow = { ...row };
+                const e = edits[idx] || {};
+
+                // 1. Ambil data teks & tabel yang diubah di web
+                if (e.kontraktor !== undefined) newRow['Nama Kontraktor'] = e.kontraktor;
+                if (e.area !== undefined) newRow['Area Kerja'] = e.area;
+                if (e.jumlah_pekerja !== undefined) newRow['Jumlah Pekerja'] = e.jumlah_pekerja;
+                if (e.uraian !== undefined) newRow['Uraian Pekerjaan'] = e.uraian;
+                if (e.izin_kerja !== undefined) newRow['Izin Kerja Utama'] = e.izin_kerja;
+                if (e.izin_pendukung !== undefined) newRow['Izin Kerja Pendukung'] = e.izin_pendukung;
+                if (e.validasi !== undefined) newRow['Validasi H-1'] = e.validasi;
+
+                // 2. Ambil data posisi Pin Peta (Top & Left) terbaru jika digeser di web
+                if (customPositions[idx]) {
+                    if (customPositions[idx].top !== undefined) newRow['Posisi Top'] = customPositions[idx].top;
+                    if (customPositions[idx].left !== undefined) newRow['Posisi Left'] = customPositions[idx].left;
+                }
+
+                // 3. Sesuaikan GSI, SI, dan AT sesuai dengan pilihan dropdown yang aktif di web
+                if (globalInfo.gsi) newRow['GSI'] = globalInfo.gsi;
+                if (globalInfo.si) newRow['SI'] = globalInfo.si;
+                if (globalInfo.at) newRow['AT'] = globalInfo.at;
+
+                return newRow;
+            });
+
+            // Buat file Excel baru dari data yang sudah disesuaikan
+            const worksheet = XLSX.utils.json_to_sheet(updatedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Monitoring");
+            XLSX.writeFile(workbook, "Data_Monitoring_FT_Boyolali_Aktif.xlsx");
         }
 
         function recalculateTotalPekerja() {
@@ -459,126 +681,61 @@
             document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: ${total} Pekerja`;
         }
 
-        function renderPendukungColumn(rowIdx) {
-            const container = document.getElementById(`pendukung-container-${rowIdx}`);
-            if (!container) return;
-
-            const textarea = document.getElementById(`uraian-textarea-${rowIdx}`);
-            const textVal = textarea ? textarea.value : '';
-            const lines = textVal.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-            const targetCount = Math.max(1, lines.length);
-
-            let pendukungHtml = `<div class="list-container">`;
-            for (let lineIdx = 0; lineIdx < targetCount; lineIdx++) {
-                let currentPendukung = window.allPendukungListStatic[0] || '-';
-                if (savedPendukungSelections[rowIdx]?.[lineIdx]) {
-                    currentPendukung = savedPendukungSelections[rowIdx][lineIdx];
-                } else if (window.rawPendukungMap[rowIdx]?.[lineIdx]) {
-                    currentPendukung = window.rawPendukungMap[rowIdx][lineIdx];
-                }
-
-                let selectClass = 'pendukung-select ' + getThemeClass(currentPendukung);
-                let optionsHtml = '';
-                window.allPendukungListStatic.forEach(opt => {
-                    const isSelected = (opt.toLowerCase() === currentPendukung.toLowerCase()) ? 'selected' : '';
-                    optionsHtml += `<option value="${opt}" ${isSelected}>${opt}</option>`;
-                });
-                if (window.allPendukungListStatic.length === 0) {
-                    optionsHtml = `<option value="${currentPendukung}" selected>${currentPendukung}</option>`;
-                }
-
-                pendukungHtml += `
-                    <div class="list-item-row" onclick="event.stopPropagation();">
-                        <select class="${selectClass}" onchange="updateSelectColor(this, ${rowIdx}, ${lineIdx})">
-                            ${optionsHtml}
-                        </select>
-                    </div>
-                `;
-            }
-            pendukungHtml += `</div>`;
-            container.innerHTML = pendukungHtml;
-        }
-
-        function resetAllPositions() {
-            if (confirm("Reset posisi pin ke awal?")) {
-                localStorage.removeItem('ft_boyolali_pin_pos');
-                customPositions = {};
-                processAndRender(globalContractorData);
-                document.getElementById('resetPosBtn').style.display = 'none';
-            }
-        }
-
-        function downloadUpdatedExcel() {
-            if (!globalContractorData.length) return;
-            let updatedData = globalContractorData.map((row, idx) => {
-                let newRow = { ...row };
-                if (savedKontraktorNames[idx] !== undefined) newRow['Nama Kontraktor'] = savedKontraktorNames[idx];
-                if (savedAreaKerja[idx] !== undefined) newRow['Area Kerja'] = savedAreaKerja[idx];
-                if (savedJumlahPekerja[idx] !== undefined) newRow['Jumlah Pekerja'] = savedJumlahPekerja[idx];
-                if (savedUraianTexts[idx] !== undefined) newRow['Uraian Pekerjaan'] = savedUraianTexts[idx];
-                if (savedIzinUtama[idx] !== undefined) newRow['Izin Kerja Utama'] = savedIzinUtama[idx];
-                if (savedValidasiH1[idx] !== undefined) newRow['Validasi H-1'] = savedValidasiH1[idx];
-                if (customPositions[idx]) {
-                    if (customPositions[idx].top) newRow['Posisi Top'] = customPositions[idx].top;
-                    if (customPositions[idx].left) newRow['Posisi Left'] = customPositions[idx].left;
-                }
-                return newRow;
-            });
-            const worksheet = XLSX.utils.json_to_sheet(updatedData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Monitoring");
-            XLSX.writeFile(workbook, "Data_Monitoring_Terbaru.xlsx");
-        }
-
         function processAndRender(rawJson) {
             document.getElementById('welcomeMessageCard').style.display = 'none';
-            document.getElementById('mapCardSection').style.display = 'block';
+            document.getElementById('topSectionGrid').style.display = 'grid';
             document.getElementById('dataTableSection').style.display = 'block';
-            document.getElementById('downloadExcelBtn').style.display = 'flex';
-            if (Object.keys(customPositions).length > 0) document.getElementById('resetPosBtn').style.display = 'flex';
 
-            let globalUniquePendukung = new Set();
-            rawJson.forEach(row => {
-                String(row['Izin Kerja Pendukung'] || '').split(/\r?\n/).forEach(item => {
-                    const cleanItem = item.trim().replace(/^[0-9]+\.\s*/, '');
-                    if (cleanItem && cleanItem !== '-') globalUniquePendukung.add(cleanItem);
+            const currentRole = localStorage.getItem('ft_boyolali_role');
+            
+            // Tampilkan tombol download excel hanya untuk admin
+            const downloadBtn = document.getElementById('downloadExcelBtn');
+            if (currentRole === 'admin') {
+                downloadBtn.style.display = 'flex';
+            } else {
+                downloadBtn.style.display = 'none';
+            }
+
+            const customPositions = liveDatabaseState.customPositions || {};
+            const edits = liveDatabaseState.edits || {};
+            const globalInfo = liveDatabaseState.globalInfo || {};
+
+            if (currentRole === 'admin' && Object.keys(customPositions).length > 0) {
+                document.getElementById('resetPosBtn').style.display = 'flex';
+            }
+
+            let allGsi = new Set(), allSi = new Set(), allAt = new Set();
+
+            const splitNames = (val, setObj) => {
+                if (!val) return;
+                String(val).split(/,|\n|;/).forEach(p => {
+                    const clean = p.trim().replace(/^[0-9]+\.\s*/, '');
+                    if (clean && clean !== '-') setObj.add(clean);
                 });
+            };
+
+            rawJson.forEach(row => {
+                splitNames(row['GSI'], allGsi);
+                splitNames(row['SI'], allSi);
+                splitNames(row['AT'], allAt);
             });
-            window.allPendukungListStatic = Array.from(globalUniquePendukung);
-            window.rawPendukungMap = {};
 
-            const data = rawJson.map((row, idx) => {
-                let topPos = customPositions[idx]?.top || String(row['Posisi Top'] || '50%').trim();
-                let leftPos = customPositions[idx]?.left || String(row['Posisi Left'] || '50%').trim();
-                if (!topPos.includes('%')) topPos += '%';
-                if (!leftPos.includes('%')) leftPos += '%';
+            const setupDropdown = (elId, uniqueSet, key) => {
+                const el = document.getElementById(elId);
+                let html = '';
+                const curr = globalInfo[key] || (uniqueSet.size > 0 ? Array.from(uniqueSet)[0] : '-');
+                uniqueSet.forEach(val => {
+                    html += `<option value="${val}" ${val.toLowerCase() === curr.toLowerCase() ? 'selected' : ''}>${val}</option>`;
+                });
+                if (uniqueSet.size === 0) html = `<option value="-" selected>-</option>`;
+                el.innerHTML = html;
+                el.className = 'global-info-select ' + getThemeClass(curr);
+                if (currentRole === 'tamu' || currentRole === 'vendor') el.disabled = true;
+            };
 
-                const rawPend = String(row['Izin Kerja Pendukung'] || '');
-                window.rawPendukungMap[idx] = rawPend.split(/\r?\n/).map(l => l.trim().replace(/^[0-9]+\.\s*/, '')).filter(l => l);
-
-                let rawIzin = String(row['Izin Kerja Utama'] || 'BELUM').trim().toUpperCase();
-                if (rawIzin === 'APPROVED') rawIzin = 'SUDAH';
-                if (rawIzin !== 'SUDAH') rawIzin = 'BELUM';
-
-                let rawVal = String(row['Validasi H-1'] || 'BELUM').trim().toUpperCase();
-                if (rawVal === 'APPROVED') rawVal = 'SUDAH';
-                if (rawVal !== 'SUDAH') rawVal = 'BELUM';
-
-                return {
-                    kontraktor: row['Nama Kontraktor'] || '-',
-                    jumlah_pekerja: row['Jumlah Pekerja'] !== undefined ? parseInt(row['Jumlah Pekerja']) : 0,
-                    area: row['Area Kerja'] || '-',
-                    warna: row['Warna'] || 'Green',
-                    top: topPos,
-                    left: leftPos,
-                    uraian: String(row['Uraian Pekerjaan'] || '-'),
-                    izin_kerja: rawIzin,
-                    gsi: String(row['GSI'] || '-'),
-                    si: String(row['SI'] || '-'),
-                    at: String(row['AT'] || '-'),
-                    validasi: rawVal
-                };
-            });
+            setupDropdown('infoGsiSelect', allGsi, 'gsi');
+            setupDropdown('infoSiSelect', allSi, 'si');
+            setupDropdown('infoAtSelect', allAt, 'at');
 
             const mapWrapper = document.getElementById('mapWrapper');
             const imgEl = document.getElementById('siteMapImg');
@@ -587,114 +744,140 @@
             mapWrapper.innerHTML = '';
             mapWrapper.appendChild(imgEl);
 
-            let allGsi = new Set(), allSi = new Set(), allAt = new Set();
+            rawJson.forEach((row, index) => {
+                const e = edits[index] || {};
+                let top = customPositions[index]?.top || String(row['Posisi Top'] || '50%');
+                let left = customPositions[index]?.left || String(row['Posisi Left'] || '50%');
 
-            data.forEach((item, index) => {
-                if (item.gsi && item.gsi !== '-') allGsi.add(item.gsi);
-                if (item.si && item.si !== '-') allSi.add(item.si);
-                if (item.at && item.at !== '-') allAt.add(item.at);
+                const kontraktor = e.kontraktor !== undefined ? e.kontraktor : (row['Nama Kontraktor'] || '-');
+                const area = e.area !== undefined ? e.area : (row['Area Kerja'] || '-');
+                const jumlah = e.jumlah_pekerja !== undefined ? e.jumlah_pekerja : (parseInt(row['Jumlah Pekerja']) || 0);
+                const uraian = e.uraian !== undefined ? e.uraian : (row['Uraian Pekerjaan'] || '-');
+                const izin = (e.izin_kerja !== undefined ? e.izin_kerja : (row['Izin Kerja Utama'] || 'BELUM')).toUpperCase();
+                const izinPendukungVal = e.izin_pendukung !== undefined ? e.izin_pendukung : (row['Izin Kerja Pendukung'] || '-');
+                const validasi = (e.validasi !== undefined ? e.validasi : (row['Validasi H-1'] || 'BELUM')).toUpperCase();
+                const warna = row['Warna'] || 'Green';
+                
+                const isReadOnlyAll = (currentRole === 'tamu');
+                const isReadOnlyRest = (currentRole === 'tamu' || currentRole === 'vendor');
 
-                const row = document.createElement('tr');
-                row.className = 'contractor-row';
-                row.id = `row-${index}`;
-                row.onclick = () => focusContractor(index);
+                let uraianLines = String(uraian).split(/\r?\n/).filter(line => line.trim() !== '');
+                if (uraianLines.length === 0) uraianLines = [uraian];
 
-                let currentKontraktor = savedKontraktorNames[index] !== undefined ? savedKontraktorNames[index] : item.kontraktor;
-                let currentArea = savedAreaKerja[index] !== undefined ? savedAreaKerja[index] : item.area;
-                let currentJumlah = savedJumlahPekerja[index] !== undefined ? savedJumlahPekerja[index] : item.jumlah_pekerja;
-                let currentUraianText = savedUraianTexts[index] !== undefined ? savedUraianTexts[index] : item.uraian;
-                let currentIzinUtama = savedIzinUtama[index] !== undefined ? savedIzinUtama[index] : item.izin_kerja;
-                let currentValidasi = savedValidasiH1[index] !== undefined ? savedValidasiH1[index] : item.validasi;
+                let sikaPendukungValues = String(izinPendukungVal).split(/\r?\n|,|;/).map(s => s.trim()).filter(s => s !== '');
+                
+                let sikaDropdownsHtml = '';
+                for (let i = 0; i < uraianLines.length; i++) {
+                    let currentSelectedSika = sikaPendukungValues[i] || '-';
+                    
+                    let optionsHtml = `<option value="-">- (Tidak Ada)</option>`;
+                    globalAvailableSikaOptions.forEach(opt => {
+                        const isSelected = currentSelectedSika.toLowerCase() === opt.toLowerCase() ? 'selected' : '';
+                        optionsHtml += `<option value="${opt}" ${isSelected}>${opt}</option>`;
+                    });
+                    if (currentSelectedSika !== '-' && !globalAvailableSikaOptions.some(o => o.toLowerCase() === currentSelectedSika.toLowerCase())) {
+                        optionsHtml += `<option value="${currentSelectedSika}" selected>${currentSelectedSika}</option>`;
+                    }
 
-                const izinClass = (currentIzinUtama.toUpperCase() === 'SUDAH') ? 'status-dropdown status-sudah' : 'status-dropdown status-belum';
-                const validasiClass = (currentValidasi.toUpperCase() === 'SUDAH') ? 'status-dropdown status-sudah' : 'status-dropdown status-belum';
+                    let selectClass = `sika-select-item ${getSikaClass(currentSelectedSika)}`;
 
-                row.innerHTML = `
+                    sikaDropdownsHtml += `
+                        <select class="${selectClass}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='sika-select-item '+getSikaClass(this.value); updateSikaPendukungItem(${index}, ${i}, this.value);">
+                            ${optionsHtml}
+                        </select>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'contractor-row';
+                tr.id = `row-${index}`;
+                tr.onclick = () => focusContractor(index);
+
+                tr.innerHTML = `
                     <td>
                         <div class="contractor-name-wrapper" onclick="event.stopPropagation();">
-                            <span class="dot-indicator color-${item.warna}" onclick="focusContractor(${index});"></span>
-                            <input type="text" class="editable-input" value="${currentKontraktor}" oninput="updateKontraktorName(this, ${index})">
-                            <input type="number" class="editable-input input-jumlah" value="${currentJumlah}" min="0" oninput="updateJumlahPekerjaInput(this, ${index})">
+                            <span class="dot-indicator color-${warna}" onclick="focusContractor(${index})"></span>
+                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)">
+                            <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
                         </div>
-                        <div style="margin-top: 4px; padding-left: 16px;" onclick="event.stopPropagation();">
-                            <input type="text" class="editable-input" value="${currentArea}" oninput="updateAreaKerjaInput(this, ${index})" style="font-size: 0.75rem; color: #718096;">
+                        <div style="padding-left: 20px;" onclick="event.stopPropagation();">
+                            <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" style="font-size: 0.78rem; color: #718096;">
                         </div>
                     </td>
                     <td>
                         <div onclick="event.stopPropagation();">
-                            <textarea id="uraian-textarea-${index}" class="uraian-textarea" oninput="updateUraianText(this, ${index})">${currentUraianText}</textarea>
+                            <textarea class="uraian-textarea" data-row-index="${index}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" oninput="autoResizeTextarea(this)" onchange="updateFieldEdit(${index}, 'uraian', this.value); location.reload();">${uraian}</textarea>
                         </div>
                     </td>
                     <td>
                         <div onclick="event.stopPropagation();" style="text-align: center;">
-                            <select class="${izinClass}" onchange="updateIzinUtamaSelect(this, ${index})">
-                                <option value="SUDAH" ${currentIzinUtama.toUpperCase() === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
-                                <option value="BELUM" ${currentIzinUtama.toUpperCase() === 'BELUM' ? 'selected' : ''}>BELUM</option>
+                            <select class="status-dropdown ${izin === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='status-dropdown '+(this.value==='SUDAH'?'status-sudah':'status-belum'); updateFieldEdit(${index}, 'izin_kerja', this.value);">
+                                <option value="SUDAH" ${izin === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
+                                <option value="BELUM" ${izin === 'BELUM' ? 'selected' : ''}>BELUM</option>
                             </select>
                         </div>
                     </td>
-                    <td><div id="pendukung-container-${index}"></div></td>
+                    <td>
+                        <div onclick="event.stopPropagation();">
+                            ${sikaDropdownsHtml}
+                        </div>
+                    </td>
                     <td>
                         <div onclick="event.stopPropagation();" style="text-align: center;">
-                            <select class="${validasiClass}" onchange="updateValidasiH1Select(this, ${index})">
-                                <option value="SUDAH" ${currentValidasi.toUpperCase() === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
-                                <option value="BELUM" ${currentValidasi.toUpperCase() === 'BELUM' ? 'selected' : ''}>BELUM</option>
+                            <select class="status-dropdown ${validasi === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='status-dropdown '+(this.value==='SUDAH'?'status-sudah':'status-belum'); updateFieldEdit(${index}, 'validasi', this.value);">
+                                <option value="SUDAH" ${validasi === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
+                                <option value="BELUM" ${validasi === 'BELUM' ? 'selected' : ''}>BELUM</option>
                             </select>
                         </div>
                     </td>
                 `;
-                tableBody.appendChild(row);
-                renderPendukungColumn(index);
+                tableBody.appendChild(tr);
+
+                tr.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
 
                 const pin = document.createElement('div');
-                pin.className = `map-pin color-${item.warna}`;
+                pin.className = `map-pin color-${warna}`;
                 pin.id = `pin-${index}`;
-                pin.style.top = item.top;
-                pin.style.left = item.left;
+                pin.style.top = top;
+                pin.style.left = left;
                 pin.innerText = index + 1;
 
-                pin.addEventListener('pointerdown', (e) => {
+                pin.addEventListener('mousedown', (e) => {
                     e.stopPropagation();
-                    focusContractor(index);
-                    pin.setPointerCapture(e.pointerId);
+                    e.preventDefault();
+                    if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
 
-                    const onPointerMove = (moveEvent) => {
+                    let isDragging = false;
+                    const startX = e.clientX, startY = e.clientY;
+
+                    const onMouseMove = (ev) => {
+                        ev.stopPropagation();
+                        if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) isDragging = true;
                         const rect = mapWrapper.getBoundingClientRect();
-                        let x = moveEvent.clientX - rect.left;
-                        let y = moveEvent.clientY - rect.top;
-                        x = Math.max(0, Math.min(x, rect.width));
-                        y = Math.max(0, Math.min(y, rect.height));
-
-                        const leftPct = ((x / rect.width) * 100).toFixed(1) + '%';
-                        const topPct = ((y / rect.height) * 100).toFixed(1) + '%';
-
-                        pin.style.left = leftPct;
-                        pin.style.top = topPct;
-                        document.getElementById('coordResult').innerText = `Pin -> Top: ${topPct}, Left: ${leftPct}`;
+                        let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+                        let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
+                        pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
+                        pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
                     };
 
-                    const onPointerUp = (upEvent) => {
-                        pin.releasePointerCapture(upEvent.pointerId);
-                        pin.removeEventListener('pointermove', onPointerMove);
-                        pin.removeEventListener('pointerup', onPointerUp);
-
-                        customPositions[index] = { top: pin.style.top, left: pin.style.left };
-                        localStorage.setItem('ft_boyolali_pin_pos', JSON.stringify(customPositions));
-                        document.getElementById('resetPosBtn').style.display = 'flex';
-                        document.getElementById('coordResult').innerText = `Posisi pin tersimpan!`;
+                    const onMouseUp = (ev) => {
+                        ev.stopPropagation();
+                        window.removeEventListener('mousemove', onMouseMove);
+                        window.removeEventListener('mouseup', onMouseUp);
+                        if (isDragging) {
+                            updatePinPosition(index, pin.style.top, pin.style.left);
+                        } else {
+                            focusContractor(index);
+                        }
                     };
-
-                    pin.addEventListener('pointermove', onPointerMove);
-                    pin.addEventListener('pointerup', onPointerUp);
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
                 });
 
                 mapWrapper.appendChild(pin);
             });
 
             recalculateTotalPekerja();
-            document.getElementById('infoGsi').innerText = allGsi.size ? Array.from(allGsi).join(', ') : '-';
-            document.getElementById('infoSi').innerText = allSi.size ? Array.from(allSi).join(', ') : '-';
-            document.getElementById('infoAt').innerText = allAt.size ? Array.from(allAt).join(', ') : '-';
         }
     </script>
 </body>
