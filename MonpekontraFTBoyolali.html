@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Pekerjaan Kontraktor di Fuel Terminal Boyolali</title>
+    <!-- Pustaka SheetJS untuk membaca & menulis file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f8; color: #333; margin: 0; padding: 0; }
+        
+        .main-wrapper {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 20px 20px 30px 20px;
+        }
+
+        .header-banner-wrapper {
+            position: relative;
+            width: 100%;
+            background-color: #0b2545; 
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            margin-bottom: 25px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-banner-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover; 
+            max-height: 270px; 
+            object-position: center 60%;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .banner-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to right, rgba(11, 37, 69, 0.75) 30%, rgba(11, 37, 69, 0.25) 65%, rgba(11, 37, 69, 0.05) 100%);
+            padding: 20px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-title h1 { font-size: 1.65rem; font-weight: 800; margin-bottom: 4px; text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+        .header-title p { font-size: 0.95rem; color: #ffdd57; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+
+        .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .live-clock { background: rgba(0, 0, 0, 0.65); padding: 5px 10px; border-radius: 5px; font-size: 0.78rem; border: 1px solid rgba(255,255,255,0.25); white-space: nowrap; }
+        
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .upload-btn, .action-btn {
+            background: #27ae60; color: white; padding: 7px 14px; border-radius: 6px;
+            cursor: pointer; font-size: 0.85rem; font-weight: 600; border: none;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3); transition: background 0.2s;
+            display: flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none;
+        }
+        .upload-btn:hover, .action-btn:hover { background: #219653; }
+        .action-btn.reset-btn { background: #e74c3c; }
+        .action-btn.reset-btn:hover { background: #c0392b; }
+        .action-btn.download-btn { background: #2980b9; }
+        .action-btn.download-btn:hover { background: #2471a3; }
+        .upload-btn input { display: none; }
+        
+        .main-grid { display: grid; grid-template-columns: 420px 1fr; gap: 25px; }
+        @media (max-width: 1024px) { 
+            .main-grid { grid-template-columns: 1fr; } 
+            .banner-overlay { position: relative; background: #0b2545; padding: 20px; flex-direction: column; align-items: flex-start; }
+            .header-actions { align-items: flex-start; width: 100%; margin-top: 10px; }
+        }
+        
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #eaeaea; margin-bottom: 20px; }
+        .card-header { padding: 15px 20px; background: #fafbfc; border-bottom: 1px solid #eee; font-weight: 600; font-size: 1rem; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 20px; }
+        
+        .map-container { 
+            position: relative; 
+            width: 100%; 
+            background: #fff; 
+            border-radius: 6px; 
+            overflow: hidden; 
+            border: 1px solid #ddd; 
+            user-select: none;
+            touch-action: none;
+        }
+        .map-container img { width: 100%; display: block; height: auto; pointer-events: none; }
+        
+        .map-pin {
+            position: absolute; 
+            width: 30px; 
+            height: 30px; 
+            border-radius: 50%;
+            border: 2px solid white; 
+            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+            cursor: grab; 
+            transform: translate(-50%, -50%);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 11px; 
+            font-weight: bold; 
+            color: white;
+            z-index: 10;
+            touch-action: none;
+        }
+        .map-pin:active { cursor: grabbing; }
+        .map-pin.highlight {
+            box-shadow: 0 0 15px #f39c12;
+            border: 3px solid #fff;
+            animation: pulse-pin 1.2s infinite;
+            z-index: 30;
+        }
+        @keyframes pulse-pin {
+            0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.8); }
+            70% { box-shadow: 0 0 0 12px rgba(243, 156, 18, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+        }
+
+        .coordinate-helper {
+            margin-top: 10px; background: #eef2f7; padding: 10px 12px; border-radius: 6px;
+            font-size: 0.82rem; color: #2c3e50; border: 1px dashed #cbd5e1; display: flex;
+            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+        }
+        .coordinate-helper span { font-weight: bold; color: #d97706; }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .data-table th { background: #f8f9fa; color: #4a5568; font-weight: 600; text-align: left; padding: 12px 15px; border-bottom: 2px solid #edf2f7; }
+        .data-table td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; vertical-align: middle; color: #2d3748; }
+
+        .list-container { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+        .list-item-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        
+        .editable-input {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #2d3748;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .editable-input:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+            background: #fff;
+        }
+        .input-jumlah {
+            width: 70px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .uraian-textarea {
+            width: 100%;
+            min-height: 45px;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #2d3748;
+            background: #ffffff;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            line-height: 1.4;
+        }
+        .uraian-textarea:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+            background: #fff;
+        }
+        
+        .status-dropdown {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 1px solid #cbd5e1;
+            cursor: pointer;
+            outline: none;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .status-sudah {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            border-color: #c3e6cb !important;
+        }
+
+        .status-belum {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            border-color: #f5c6cb !important;
+        }
+
+        .pendukung-select {
+            width: 100%;
+            padding: 5px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold;
+            border: 1px solid #cbd5e1; cursor: pointer; outline: none; transition: all 0.2s;
+        }
+
+        .color-theme-1 { background-color: #e0f2fe !important; color: #0369a1 !important; border-color: #bae6fd !important; }
+        .color-theme-2 { background-color: #f3e8ff !important; color: #7e22ce !important; border-color: #e9d5ff !important; }
+        .color-theme-3 { background-color: #fef3c7 !important; color: #b45309 !important; border-color: #fde68a !important; }
+        .color-theme-4 { background-color: #dcfce7 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
+        .color-theme-5 { background-color: #ffe4e6 !important; color: #be123c !important; border-color: #fecdd3 !important; }
+
+        .contractor-row { transition: background-color 0.3s; cursor: pointer; }
+        .contractor-row:hover { background-color: #f1f5f9; }
+        .contractor-row.highlight-row { background-color: #fef3c7 !important; }
+
+        .contractor-name-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .dot-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer; transition: transform 0.2s; flex-shrink: 0; }
+        .dot-indicator:hover { transform: scale(1.3); }
+        
+        .color-Green { background-color: #2ecc71; }
+        .color-Blue { background-color: #3498db; }
+        .color-Red { background-color: #e74c3c; }
+        .color-Brown { background-color: #d35400; }
+        .color-Violet { background-color: #9b59b6; }
+        .color-Yellow { background-color: #f1c40f; }
+        
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .info-box { background: #f8f9fa; padding: 10px 15px; border-radius: 6px; border-left: 4px solid #0066cc; }
+        .info-box label { font-size: 0.75rem; color: #718096; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 3px; }
+        .info-box div { font-size: 0.9rem; font-weight: 600; color: #2d3748; }
+
+        .welcome-container-full {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid #eaeaea;
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .welcome-icon { font-size: 3.5rem; margin-bottom: 20px; }
+        .welcome-container-full h2 { font-size: 2rem; font-weight: 700; color: #0b2545; margin-bottom: 12px; }
+        .welcome-container-full p { font-size: 1.1rem; color: #64748b; max-width: 650px; line-height: 1.6; margin-bottom: 25px; }
+        .welcome-badge { background: #eef2f7; color: #1e293b; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; border: 1px solid #cbd5e1; }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+
+        <div class="header-banner-wrapper">
+            <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="header-banner-img" onerror="this.style.display='none'">
+            <div class="banner-overlay">
+                <div class="header-title">
+                    <h1>Monitoring Pekerjaan Kontraktor di Fuel Terminal Boyolali</h1>
+                    <p id="totalPekerjaText">Total Pekerja Aktif: -</p>
+                </div>
+                <div class="header-actions">
+                    <div class="live-clock" id="liveClock">Memuat Waktu...</div>
+                    <div class="btn-group">
+                        <button class="action-btn download-btn" id="downloadExcelBtn" onclick="downloadUpdatedExcel()" style="display:none;" title="Download Excel dengan data terbaru">📥 Download Excel Terbaru</button>
+                        <button class="action-btn reset-btn" id="resetPosBtn" onclick="resetAllPositions()" style="display:none;" title="Reset posisi pin ke Excel">🔄 Reset Posisi Pin</button>
+                        <label class="upload-btn">
+                            📂 Update Data Excel
+                            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelUpload(event)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            
+            <div class="welcome-container-full" id="welcomeMessageCard">
+                <div class="welcome-icon">📊</div>
+                <h2>Selamat Datang di Monitoring Pekerjaan Kontraktor Fuel Terminal Boyolali</h2>
+                <p>Sistem ini memantau aktivitas, lokasi kerja, serta progress harian kontraktor. Silakan klik tombol <b>"📂 Update Data Excel"</b> di pojok kanan atas untuk memuat data.</p>
+                <div class="welcome-badge">Status: Menunggu Unggahan Data Excel</div>
+            </div>
+
+            <div id="mapCardSection" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Area Lokasi Kerja</span>
+                        <span style="font-size: 0.75rem; color: #718096;">💡 Klik & Geser pin langsung di peta</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="map-container" id="mapWrapper">
+                            <img src="peta_site.jpg" alt="Peta Site" id="siteMapImg" onerror="this.src='https://via.placeholder.com/600x450?text=Peta+Site+Belum+Tersedia'">
+                        </div>
+                        <div class="coordinate-helper">
+                            <span>Status Pin:</span> <strong id="coordResult">Tarik/geser pin di atas untuk memindahkan</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Informasi GSI, SI & AT</div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-box"><label>GSI</label><div id="infoGsi">-</div></div>
+                            <div class="info-box"><label>SI</label><div id="infoSi">-</div></div>
+                            <div class="info-box"><label>AT</label><div id="infoAt">-</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dataTableSection" style="display: none;">
+                <div class="card">
+                    <div class="card-header">Daftar & Uraian Pekerjaan Kontraktor</div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Nama Kontraktor & Jumlah Pekerja</th>
+                                    <th style="width: 27%;">Uraian Pekerjaan (Dapat Diketik Langsung)</th>
+                                    <th style="width: 14%; text-align: center;">Izin Kerja Utama</th>
+                                    <th style="width: 22%;">Izin Kerja Pendukung</th>
+                                    <th style="width: 12%; text-align: center;">Validasi H-1</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let globalContractorData = [];
+        let customPositions = JSON.parse(localStorage.getItem('ft_boyolali_pin_pos') || '{}');
+        let savedPendukungSelections = JSON.parse(localStorage.getItem('ft_boyolali_pendukung_sel') || '{}');
+        let savedUraianTexts = JSON.parse(localStorage.getItem('ft_boyolali_uraian_text') || '{}');
+        let savedKontraktorNames = JSON.parse(localStorage.getItem('ft_boyolali_kontraktor_name') || '{}');
+        let savedJumlahPekerja = JSON.parse(localStorage.getItem('ft_boyolali_jumlah_pekerja') || '{}');
+        let savedAreaKerja = JSON.parse(localStorage.getItem('ft_boyolali_area_kerja') || '{}');
+        let savedIzinUtama = JSON.parse(localStorage.getItem('ft_boyolali_izin_utama') || '{}');
+        let savedValidasiH1 = JSON.parse(localStorage.getItem('ft_boyolali_validasi_h1') || '{}');
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    globalContractorData = json;
+                    processAndRender(json);
+                    alert("✅ Data Excel berhasil dimuat dan diperbarui!");
+                } catch (error) {
+                    console.error(error);
+                    alert("❌ Gagal membaca file Excel. Pastikan format kolom sesuai.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function focusContractor(index) {
+            document.querySelectorAll('.map-pin').forEach(p => p.classList.remove('highlight'));
+            document.querySelectorAll('.contractor-row').forEach(r => r.classList.remove('highlight-row'));
+
+            const targetPin = document.getElementById(`pin-${index}`);
+            const targetRow = document.getElementById(`row-${index}`);
+
+            if (targetPin) {
+                targetPin.classList.add('highlight');
+                targetPin.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
+            if (targetRow) {
+                targetRow.classList.add('highlight-row');
+                targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function getThemeClass(val) {
+            let hash = 0;
+            const str = String(val).trim();
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const themeIndex = (Math.abs(hash) % 5) + 1;
+            return `color-theme-${themeIndex}`;
+        }
+
+        function updateSelectColor(selectElement, rowIdx, lineIdx) {
+            selectElement.className = 'pendukung-select ' + getThemeClass(selectElement.value);
+            
+            if (!savedPendukungSelections[rowIdx]) {
+                savedPendukungSelections[rowIdx] = {};
+            }
+            savedPendukungSelections[rowIdx][lineIdx] = selectElement.value;
+            localStorage.setItem('ft_boyolali_pendukung_sel', JSON.stringify(savedPendukungSelections));
+        }
+
+        function updateStatusDropdownStyle(selectEl) {
+            const val = selectEl.value.toUpperCase();
+            selectEl.className = 'status-dropdown ' + (val === 'SUDAH' ? 'status-sudah' : 'status-belum');
+        }
+
+        function updateIzinUtamaSelect(selectEl, rowIdx) {
+            updateStatusDropdownStyle(selectEl);
+            savedIzinUtama[rowIdx] = selectEl.value;
+            localStorage.setItem('ft_boyolali_izin_utama', JSON.stringify(savedIzinUtama));
+        }
+
+        function updateValidasiH1Select(selectEl, rowIdx) {
+            updateStatusDropdownStyle(selectEl);
+            savedValidasiH1[rowIdx] = selectEl.value;
+            localStorage.setItem('ft_boyolali_validasi_h1', JSON.stringify(savedValidasiH1));
+        }
+
+        function updateUraianText(textareaElement, rowIdx) {
+            if (!savedUraianTexts[rowIdx]) {
+                savedUraianTexts[rowIdx] = {};
+            }
+            savedUraianTexts[rowIdx] = textareaElement.value;
+            localStorage.setItem('ft_boyolali_uraian_text', JSON.stringify(savedUraianTexts));
+
+            renderPendukungColumn(rowIdx);
+        }
+
+        function updateKontraktorName(inputElement, rowIdx) {
+            savedKontraktorNames[rowIdx] = inputElement.value;
+            localStorage.setItem('ft_boyolali_kontraktor_name', JSON.stringify(savedKontraktorNames));
+
+            const pin = document.getElementById(`pin-${rowIdx}`);
+            if (pin) {
+                const currentArea = savedAreaKerja[rowIdx] !== undefined ? savedAreaKerja[rowIdx] : (globalContractorData[rowIdx]?.['Area Kerja'] || '');
+                pin.title = `${inputElement.value} (${currentArea})`;
+            }
+        }
+
+        function updateAreaKerjaInput(inputElement, rowIdx) {
+            savedAreaKerja[rowIdx] = inputElement.value;
+            localStorage.setItem('ft_boyolali_area_kerja', JSON.stringify(savedAreaKerja));
+
+            const pin = document.getElementById(`pin-${rowIdx}`);
+            if (pin) {
+                pin.setAttribute('data-area', inputElement.value);
+                const currentKontraktor = savedKontraktorNames[rowIdx] !== undefined ? savedKontraktorNames[rowIdx] : (globalContractorData[rowIdx]?.['Nama Kontraktor'] || '');
+                pin.title = `${currentKontraktor} (${inputElement.value})`;
+            }
+        }
+
+        function updateJumlahPekerjaInput(inputElement, rowIdx) {
+            const val = parseInt(inputElement.value) || 0;
+            savedJumlahPekerja[rowIdx] = val;
+            localStorage.setItem('ft_boyolali_jumlah_pekerja', JSON.stringify(savedJumlahPekerja));
+
+            recalculateTotalPekerja();
+        }
+
+        function recalculateTotalPekerja() {
+            let total = 0;
+            const rows = document.querySelectorAll('.input-jumlah');
+            rows.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: ${total} Pekerja`;
+        }
+
+        function renderPendukungColumn(rowIdx) {
+            const container = document.getElementById(`pendukung-container-${rowIdx}`);
+            if (!container) return;
+
+            const textarea = document.getElementById(`uraian-textarea-${rowIdx}`);
+            const textVal = textarea ? textarea.value : '';
+            
+            const lines = textVal.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+            const targetCount = Math.max(1, lines.length);
+
+            let pendukungHtml = `<div class="list-container">`;
+            for (let lineIdx = 0; lineIdx < targetCount; lineIdx++) {
+                let currentPendukung = window.allPendukungListStatic[0] || '-';
+                
+                if (savedPendukungSelections[rowIdx] && savedPendukungSelections[rowIdx][lineIdx]) {
+                    currentPendukung = savedPendukungSelections[rowIdx][lineIdx];
+                } else if (window.rawPendukungMap[rowIdx] && window.rawPendukungMap[rowIdx][lineIdx]) {
+                    currentPendukung = window.rawPendukungMap[rowIdx][lineIdx];
+                }
+
+                let selectClass = 'pendukung-select ' + getThemeClass(currentPendukung);
+
+                let optionsHtml = '';
+                window.allPendukungListStatic.forEach(opt => {
+                    const isSelected = (opt.toLowerCase() === currentPendukung.toLowerCase()) ? 'selected' : '';
+                    optionsHtml += `<option value="${opt}" ${isSelected}>${opt}</option>`;
+                });
+                if (window.allPendukungListStatic.length === 0) {
+                    optionsHtml = `<option value="${currentPendukung}" selected>${currentPendukung}</option>`;
+                }
+
+                pendukungHtml += `
+                    <div class="list-item-row" onclick="event.stopPropagation();">
+                        <select class="${selectClass}" onchange="updateSelectColor(this, ${rowIdx}, ${lineIdx})">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                `;
+            }
+            pendukungHtml += `</div>`;
+            container.innerHTML = pendukungHtml;
+        }
+
+        function resetAllPositions() {
+            if (confirm("Reset posisi seluruh pin di peta kembali ke data awal Excel? (Nama, area, uraian, & pilihan Anda akan tetap aman)")) {
+                localStorage.removeItem('ft_boyolali_pin_pos');
+                customPositions = {};
+                processAndRender(globalContractorData);
+                document.getElementById('resetPosBtn').style.display = 'none';
+            }
+        }
+
+        function downloadUpdatedExcel() {
+            if (!globalContractorData || globalContractorData.length === 0) {
+                alert("Belum ada data Excel yang dimuat.");
+                return;
+            }
+
+            let updatedData = globalContractorData.map((row, idx) => {
+                let newRow = { ...row };
+
+                if (savedKontraktorNames[idx] !== undefined) {
+                    newRow['Nama Kontraktor'] = savedKontraktorNames[idx];
+                }
+
+                if (savedAreaKerja[idx] !== undefined) {
+                    newRow['Area Kerja'] = savedAreaKerja[idx];
+                }
+
+                if (savedJumlahPekerja[idx] !== undefined) {
+                    newRow['Jumlah Pekerja'] = savedJumlahPekerja[idx];
+                }
+
+                if (savedUraianTexts[idx] !== undefined) {
+                    newRow['Uraian Pekerjaan'] = savedUraianTexts[idx];
+                }
+
+                if (savedIzinUtama[idx] !== undefined) {
+                    newRow['Izin Kerja Utama'] = savedIzinUtama[idx];
+                }
+
+                if (savedValidasiH1[idx] !== undefined) {
+                    newRow['Validasi H-1'] = savedValidasiH1[idx];
+                }
+
+                if (savedPendukungSelections[idx]) {
+                    const textarea = document.getElementById(`uraian-textarea-${idx}`);
+                    const textVal = textarea ? textarea.value : String(newRow['Uraian Pekerjaan'] || '');
+                    const targetCount = Math.max(1, textVal.split(/\r?\n/).filter(l => l.trim()).length);
+
+                    let mergedPendukung = [];
+                    for (let l = 0; l < targetCount; l++) {
+                        let val = savedPendukungSelections[idx][l] || window.allPendukungListStatic[0] || '-';
+                        mergedPendukung.push(val);
+                    }
+                    newRow['Izin Kerja Pendukung'] = mergedPendukung.join('\n');
+                }
+
+                if (customPositions[idx]) {
+                    if (customPositions[idx].top) newRow['Posisi Top'] = customPositions[idx].top;
+                    if (customPositions[idx].left) newRow['Posisi Left'] = customPositions[idx].left;
+                }
+
+                return newRow;
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(updatedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Monitoring");
+
+            XLSX.writeFile(workbook, "Data_Monitoring_Terbaru.xlsx");
+            alert("📥 File Excel terbaru berhasil diunduh dengan seluruh perubahan data Anda!");
+        }
+
+        function processAndRender(rawJson) {
+            document.getElementById('welcomeMessageCard').style.display = 'none';
+            document.getElementById('mapCardSection').style.display = 'block';
+            document.getElementById('dataTableSection').style.display = 'block';
+
+            document.getElementById('downloadExcelBtn').style.display = 'flex';
+            if (Object.keys(customPositions).length > 0) {
+                document.getElementById('resetPosBtn').style.display = 'flex';
+            }
+
+            let globalUniquePendukung = new Set();
+            rawJson.forEach(row => {
+                const rawPendukung = String(row['Izin Kerja Pendukung'] || '');
+                rawPendukung.split(/\r?\n/).forEach(item => {
+                    const cleanItem = item.trim().replace(/^[0-9]+\.\s*/, '');
+                    if (cleanItem && cleanItem !== '-') {
+                        globalUniquePendukung.add(cleanItem);
+                    }
+                });
+            });
+            window.allPendukungListStatic = Array.from(globalUniquePendukung);
+            window.rawPendukungMap = {};
+
+            const data = rawJson.map((row, idx) => {
+                let topPos = customPositions[idx]?.top || String(row['Posisi Top'] || '50%').trim();
+                let leftPos = customPositions[idx]?.left || String(row['Posisi Left'] || '50%').trim();
+                if (!topPos.includes('%')) topPos += '%';
+                if (!leftPos.includes('%')) leftPos += '%';
+
+                const rawPend = String(row['Izin Kerja Pendukung'] || '');
+                window.rawPendukungMap[idx] = rawPend.split(/\r?\n/).map(l => l.trim().replace(/^[0-9]+\.\s*/, '')).filter(l => l);
+
+                let rawIzin = String(row['Izin Kerja Utama'] || 'BELUM').trim().toUpperCase();
+                if (rawIzin === 'APPROVED') rawIzin = 'SUDAH';
+                if (rawIzin !== 'SUDAH' && rawIzin !== 'BELUM') rawIzin = 'BELUM';
+
+                let rawVal = String(row['Validasi H-1'] || 'BELUM').trim().toUpperCase();
+                if (rawVal === 'APPROVED') rawVal = 'SUDAH';
+                if (rawVal === 'REJECT') rawVal = 'BELUM';
+                if (rawVal !== 'SUDAH' && rawVal !== 'BELUM') rawVal = 'BELUM';
+
+                return {
+                    kontraktor: row['Nama Kontraktor'] || '-',
+                    jumlah_pekerja: row['Jumlah Pekerja'] !== undefined ? parseInt(row['Jumlah Pekerja']) : 0,
+                    area: row['Area Kerja'] || '-',
+                    warna: row['Warna'] || 'Green',
+                    top: topPos,
+                    left: leftPos,
+                    uraian: String(row['Uraian Pekerjaan'] || '-'),
+                    izin_kerja: rawIzin,
+                    gsi: String(row['GSI'] || '-'),
+                    si: String(row['SI'] || '-'),
+                    at: String(row['AT'] || '-'),
+                    validasi: rawVal
+                };
+            });
+
+            const mapWrapper = document.getElementById('mapWrapper');
+            const imgEl = document.getElementById('siteMapImg');
+            const tableBody = document.getElementById('tableBody');
+            
+            tableBody.innerHTML = '';
+            mapWrapper.innerHTML = '';
+            mapWrapper.appendChild(imgEl);
+
+            let allGsi = new Set();
+            let allSi = new Set();
+            let allAt = new Set();
+
+            data.forEach((item, index) => {
+                if (item.gsi && item.gsi !== '-' && item.gsi !== 'nan') allGsi.add(item.gsi);
+                if (item.si && item.si !== '-' && item.si !== 'nan') allSi.add(item.si);
+                if (item.at && item.at !== '-' && item.at !== 'nan') allAt.add(item.at);
+
+                const row = document.createElement('tr');
+                row.className = 'contractor-row';
+                row.id = `row-${index}`;
+                row.onclick = () => focusContractor(index);
+
+                let currentKontraktor = item.kontraktor;
+                if (savedKontraktorNames[index] !== undefined) {
+                    currentKontraktor = savedKontraktorNames[index];
+                }
+
+                let currentArea = item.area;
+                if (savedAreaKerja[index] !== undefined) {
+                    currentArea = savedAreaKerja[index];
+                }
+
+                let currentJumlah = item.jumlah_pekerja;
+                if (savedJumlahPekerja[index] !== undefined) {
+                    currentJumlah = savedJumlahPekerja[index];
+                }
+
+                let currentUraianText = item.uraian;
+                if (savedUraianTexts[index] !== undefined) {
+                    currentUraianText = savedUraianTexts[index];
+                }
+
+                let currentIzinUtama = item.izin_kerja;
+                if (savedIzinUtama[index] !== undefined) {
+                    currentIzinUtama = savedIzinUtama[index];
+                }
+                const izinClass = (currentIzinUtama.toUpperCase() === 'SUDAH') ? 'status-dropdown status-sudah' : 'status-dropdown status-belum';
+
+                let currentValidasi = item.validasi;
+                if (savedValidasiH1[index] !== undefined) {
+                    currentValidasi = savedValidasiH1[index];
+                }
+                const validasiClass = (currentValidasi.toUpperCase() === 'SUDAH') ? 'status-dropdown status-sudah' : 'status-dropdown status-belum';
+
+                let kontraktorHtml = `
+                    <div class="contractor-name-wrapper" onclick="event.stopPropagation();">
+                        <span class="dot-indicator color-${item.warna}" onclick="focusContractor(${index});" title="Klik untuk lihat pin di peta"></span>
+                        <input type="text" class="editable-input" value="${currentKontraktor}" placeholder="Nama Kontraktor" oninput="updateKontraktorName(this, ${index})">
+                        <input type="number" class="editable-input input-jumlah" value="${currentJumlah}" min="0" placeholder="Jml" oninput="updateJumlahPekerjaInput(this, ${index})" title="Jumlah Pekerja">
+                    </div>
+                    <div style="margin-top: 4px; padding-left: 20px;" onclick="event.stopPropagation();">
+                        <input type="text" class="editable-input" value="${currentArea}" placeholder="Area Kerja" oninput="updateAreaKerjaInput(this, ${index})" style="font-size: 0.78rem; color: #718096;">
+                    </div>
+                `;
+
+                let uraianHtml = `
+                    <div onclick="event.stopPropagation();">
+                        <textarea id="uraian-textarea-${index}" class="uraian-textarea" placeholder="Ketik uraian pekerjaan di sini..." oninput="updateUraianText(this, ${index})">${currentUraianText}</textarea>
+                    </div>
+                `;
+
+                let izinUtamaHtml = `
+                    <div onclick="event.stopPropagation();" style="text-align: center;">
+                        <select class="${izinClass}" onchange="updateIzinUtamaSelect(this, ${index})">
+                            <option value="SUDAH" ${currentIzinUtama.toUpperCase() === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
+                            <option value="BELUM" ${currentIzinUtama.toUpperCase() === 'BELUM' ? 'selected' : ''}>BELUM</option>
+                        </select>
+                    </div>
+                `;
+
+                let pendukungHtml = `<div id="pendukung-container-${index}"></div>`;
+
+                let validasiHtml = `
+                    <div onclick="event.stopPropagation();" style="text-align: center;">
+                        <select class="${validasiClass}" onchange="updateValidasiH1Select(this, ${index})">
+                            <option value="SUDAH" ${currentValidasi.toUpperCase() === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
+                            <option value="BELUM" ${currentValidasi.toUpperCase() === 'BELUM' ? 'selected' : ''}>BELUM</option>
+                        </select>
+                    </div>
+                `;
+
+                row.innerHTML = `
+                    <td>${kontraktorHtml}</td>
+                    <td>${uraianHtml}</td>
+                    <td>${izinUtamaHtml}</td>
+                    <td>${pendukungHtml}</td>
+                    <td>${validasiHtml}</td>
+                `;
+                tableBody.appendChild(row);
+
+                renderPendukungColumn(index);
+
+                const pin = document.createElement('div');
+                pin.className = `map-pin color-${item.warna}`;
+                pin.id = `pin-${index}`;
+                pin.setAttribute('data-area', currentArea);
+                pin.style.top = item.top;
+                pin.style.left = item.left;
+                pin.innerText = index + 1;
+                pin.title = `${currentKontraktor} (${currentArea})`;
+
+                pin.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    focusContractor(index);
+                    pin.setPointerCapture(e.pointerId);
+
+                    const onPointerMove = (moveEvent) => {
+                        const rect = mapWrapper.getBoundingClientRect();
+                        let x = moveEvent.clientX - rect.left;
+                        let y = moveEvent.clientY - rect.top;
+
+                        x = Math.max(0, Math.min(x, rect.width));
+                        y = Math.max(0, Math.min(y, rect.height));
+
+                        const leftPct = ((x / rect.width) * 100).toFixed(1) + '%';
+                        const topPct = ((y / rect.height) * 100).toFixed(1) + '%';
+
+                        pin.style.left = leftPct;
+                        pin.style.top = topPct;
+                        document.getElementById('coordResult').innerText = `Pin -> Top: ${topPct}, Left: ${leftPct}`;
+                    };
+
+                    const onPointerUp = (upEvent) => {
+                        pin.releasePointerCapture(upEvent.pointerId);
+                        pin.removeEventListener('pointermove', onPointerMove);
+                        pin.removeEventListener('pointerup', onPointerUp);
+
+                        const finalTop = pin.style.top;
+                        const finalLeft = pin.style.left;
+
+                        customPositions[index] = { top: finalTop, left: finalLeft };
+                        localStorage.setItem('ft_boyolali_pin_pos', JSON.stringify(customPositions));
+                        document.getElementById('resetPosBtn').style.display = 'flex';
+                        document.getElementById('coordResult').innerText = `Posisi pin berhasil disimpan!`;
+                    };
+
+                    pin.addEventListener('pointermove', onPointerMove);
+                    pin.addEventListener('pointerup', onPointerUp);
+                });
+
+                mapWrapper.appendChild(pin);
+            });
+
+            recalculateTotalPekerja();
+            document.getElementById('infoGsi').innerText = allGsi.size > 0 ? Array.from(allGsi).join(', ') : '-';
+            document.getElementById('infoSi').innerText = allSi.size > 0 ? Array.from(allSi).join(', ') : '-';
+            document.getElementById('infoAt').innerText = allAt.size > 0 ? Array.from(allAt).join(', ') : '-';
+        }
+    </script>
+</body>
+</html>
