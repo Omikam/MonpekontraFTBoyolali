@@ -545,11 +545,40 @@
         const rowsPerPage = 5;
         const initialDefaultRows = 15;
 
+        // ==========================================
+        // FITUR AUTO LOGOUT SETELAH 10 MENIT TIDAK ADA AKTIVITAS
+        // ==========================================
+        let inactivityTimer;
+        const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 Menit dalam milidetik
+
+        function resetInactivityTimer() {
+            // Hanya jalankan timer jika user sudah dalam kondisi login (overlay login tersembunyi)
+            const isLoggedOut = document.getElementById('loginOverlay').style.display === 'flex';
+            if (isLoggedOut) return;
+
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert("⚠️ Anda telah keluar otomatis karena tidak ada aktivitas selama 10 menit.");
+                handleLogout();
+            }, INACTIVITY_LIMIT);
+        }
+
+        // Pantau aktivitas mouse, keyboard, touch, atau scroll
+        window.onload = function() {
+            const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll', 'click'];
+            events.forEach(eventName => {
+                window.addEventListener(eventName, resetInactivityTimer, true);
+            });
+            resetInactivityTimer(); // Mulai timer awal
+        };
+        // ==========================================
+
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('ft_boyolali_logged_in') === 'true') {
                 const role = localStorage.getItem('ft_boyolali_role') || 'admin';
                 applyUserRoleUI(role);
                 document.getElementById('loginOverlay').style.display = 'none';
+                resetInactivityTimer();
             }
         });
 
@@ -589,6 +618,7 @@
                 applyUserRoleUI(role);
                 document.getElementById('loginOverlay').style.display = 'none';
                 errEl.style.display = 'none';
+                resetInactivityTimer();
 
                 // --- POP-UP OTOMATIS SETELAH BERHASIL LOGIN ---
                 triggerAutoPopupOnLogin(role);
@@ -652,6 +682,7 @@
         }
 
         function handleLogout() {
+            clearTimeout(inactivityTimer);
             localStorage.removeItem('ft_boyolali_logged_in');
             localStorage.removeItem('ft_boyolali_role');
             document.getElementById('loginOverlay').style.display = 'flex';
