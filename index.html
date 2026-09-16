@@ -102,6 +102,18 @@
         .action-btn.logout-btn:hover { background: #707b7c; }
         .upload-btn input { display: none; }
 
+        .table-action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .btn-delete-action {
+            background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 10px;
+            border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: background 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-delete-action:hover { background: #fecaca; }
+        .delete-row-select {
+            padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;
+            border: 1px solid #cbd5e1; outline: none; background: #fff; color: #334155; cursor: pointer;
+        }
+
         .running-text-container {
             background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
             padding: 10px 15px; margin-bottom: 25px; display: flex; align-items: center;
@@ -127,11 +139,12 @@
         @media (max-width: 1024px) { .top-section-grid { grid-template-columns: 1fr; } }
 
         .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #eaeaea; margin-bottom: 20px; }
-        .card-header { padding: 15px 20px; background: #fafbfc; border-bottom: 1px solid #eee; font-weight: 600; font-size: 1rem; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; }
+        .card-header { padding: 15px 20px; background: #fafbfc; border-bottom: 1px solid #eee; font-weight: 600; font-size: 1rem; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .card-body { padding: 20px; }
 
         .map-container { position: relative; width: 100%; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; user-select: none; }
         .map-container img { width: 100%; display: block; height: auto; pointer-events: none; }
+        
         .map-pin {
             position: absolute; width: 32px; height: 32px; border-radius: 50%;
             border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.5); cursor: grab;
@@ -199,13 +212,53 @@
         .contractor-row.highlight-row { background-color: #fef3c7 !important; }
 
         .contractor-name-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .dot-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; cursor: pointer; flex-shrink: 0; }
+        .dot-indicator { 
+            width: 14px; height: 14px; border-radius: 50%; display: inline-block; cursor: pointer; flex-shrink: 0; 
+            border: 2px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,0.3); transition: transform 0.1s;
+        }
+        .dot-indicator:hover { transform: scale(1.25); }
+        
         .color-Green { background-color: #2ecc71; }
         .color-Blue { background-color: #3498db; }
         .color-Red { background-color: #e74c3c; }
         .color-Brown { background-color: #d35400; }
         .color-Violet { background-color: #9b59b6; }
-        .color-Yellow { background-color: #f1c40f; }
+        .color-Yellow { background-color: #f1c40f; color: #333 !important; }
+        .color-Orange { background-color: #e67e22; }
+        .color-Pink { background-color: #e84393; }
+        .color-Teal { background-color: #00b894; }
+        .color-Navy { background-color: #2c3e50; }
+        .color-Cyan { background-color: #00cec9; }
+        .color-Gray { background-color: #636e72; }
+
+        #colorPickerModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center;
+            z-index: 10000; backdrop-filter: blur(3px);
+        }
+        .color-picker-card {
+            background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 380px;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .color-picker-card h3 { font-size: 1.1rem; color: #0b2545; margin-bottom: 15px; font-weight: 700; }
+        .modal-section-title { font-size: 0.82rem; font-weight: bold; color: #475569; text-align: left; margin-bottom: 10px; text-transform: uppercase; }
+        .color-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .color-option-btn {
+            padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 0.8rem;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.1s;
+        }
+        .color-option-btn:hover { transform: scale(1.05); }
+        .color-cancel-btn {
+            background: #cbd5e1; color: #334155; border: none; padding: 9px 14px; border-radius: 6px;
+            font-weight: 600; cursor: pointer; width: 100%; font-size: 0.9rem;
+        }
+        .color-cancel-btn:hover { background: #94a3b8; }
+
+        #mapPinEditModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center;
+            z-index: 10000; backdrop-filter: blur(3px);
+        }
 
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
@@ -220,6 +273,24 @@
         .welcome-container-full h2 { font-size: 2rem; font-weight: 700; color: #0b2545; margin-bottom: 12px; }
         .welcome-container-full p { font-size: 1.1rem; color: #64748b; max-width: 650px; line-height: 1.6; margin-bottom: 25px; }
         .welcome-badge { background: #eef2f7; color: #1e293b; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; border: 1px solid #cbd5e1; }
+
+        /* Styling Tombol Navigasi Halaman Baris */
+        .row-pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: #fafbfc; border-top: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
+        .row-pagination-bar button { padding: 6px 14px; cursor: pointer; background: #0b2545; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
+        .row-pagination-bar button:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .row-pagination-bar span { font-size: 0.85rem; font-weight: 600; color: #475569; }
+
+        /* Style Tombol Tambah Baris di Bawah Tabel */
+        .table-bottom-add-container {
+            padding: 15px; background: #fdfdfd; border-top: 1px solid #edf2f7; text-align: center; display: none; justify-content: center; align-items: center;
+        }
+        .btn-add-row-bottom {
+            background: #27ae60; color: white; border: none; padding: 10px 24px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: bold; cursor: pointer; box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);
+            display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s, transform 0.1s;
+        }
+        .btn-add-row-bottom:hover { background: #219653; transform: translateY(-1px); }
+        .btn-add-row-bottom:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
     </style>
 </head>
 <body>
@@ -228,7 +299,7 @@
         <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="login-bg-img" onerror="this.style.display='none'">
         <div class="login-card">
             <h2>Login MonPeKontra</h2>
-            <p>Fuel Terminal Boyolali </p>
+            <p>Fuel Terminal Boyolali</p>
             <form onsubmit="handleLogin(event)">
                 <div class="login-form-group">
                     <label>Username</label>
@@ -243,9 +314,65 @@
             </form>
             <div class="login-info-hint">
                 <b>Info Akun:</b><br>
-                • Admin (Editor & Upload): <code>admin</code> / <code>***</code><br>
+                • Admin (Editor & Upload): <code>admin</code> / <code>123</code><br>
                 • Vendor (Edit Kontraktor & Pekerjaan): <code>vendor</code> / <code>2701</code><br>
-                • Tamu (Hanya Lihat): <code>tamu</code> / <code>***</code>
+                • Tamu (Hanya Lihat): <code>tamu</code> / <code>123</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pilihan Warna -->
+    <div id="colorPickerModal">
+        <div class="color-picker-card">
+            <h3>Pilih Warna Kontraktor</h3>
+            <div class="modal-section-title">Pilih Warna Indikator</div>
+            <div class="color-options-grid">
+                <button class="color-option-btn color-Green" onclick="setContractorDotColor('Green')">Hijau</button>
+                <button class="color-option-btn color-Blue" onclick="setContractorDotColor('Blue')">Biru</button>
+                <button class="color-option-btn color-Red" onclick="setContractorDotColor('Red')">Merah</button>
+                <button class="color-option-btn color-Orange" onclick="setContractorDotColor('Orange')">Oranye</button>
+                <button class="color-option-btn color-Yellow" onclick="setContractorDotColor('Yellow')" style="color:#333;">Kuning</button>
+                <button class="color-option-btn color-Violet" onclick="setContractorDotColor('Violet')">Ungu</button>
+                <button class="color-option-btn color-Pink" onclick="setContractorDotColor('Pink')">Pink</button>
+                <button class="color-option-btn color-Teal" onclick="setContractorDotColor('Teal')">Toska</button>
+                <button class="color-option-btn color-Navy" onclick="setContractorDotColor('Navy')">Navy</button>
+                <button class="color-option-btn color-Cyan" onclick="setContractorDotColor('Cyan')" style="color:#333;">Cyan</button>
+                <button class="color-option-btn color-Brown" onclick="setContractorDotColor('Brown')">Coklat</button>
+                <button class="color-option-btn color-Gray" onclick="setContractorDotColor('Gray')">Abu-abu</button>
+            </div>
+            <button class="color-cancel-btn" onclick="closeColorPickerModal()">Batal</button>
+        </div>
+    </div>
+
+    <!-- Modal Edit Pin Peta -->
+    <div id="mapPinEditModal">
+        <div class="color-picker-card" style="max-width: 380px;">
+            <h3 id="mapPinModalTitle">Kelola Pin Peta</h3>
+            
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label class="modal-section-title">Nomor Pin (Angka)</label>
+                <input type="number" id="mapPinNumberInput" class="editable-input" style="padding: 9px; font-weight: bold; font-size: 1rem;" placeholder="Nomor pin">
+            </div>
+
+            <div class="modal-section-title">Pilih Warna Pin</div>
+            <div class="color-options-grid">
+                <button class="color-option-btn color-Green" onclick="submitMapPinColor('Green')">Hijau</button>
+                <button class="color-option-btn color-Blue" onclick="submitMapPinColor('Blue')">Biru</button>
+                <button class="color-option-btn color-Red" onclick="submitMapPinColor('Red')">Merah</button>
+                <button class="color-option-btn color-Orange" onclick="submitMapPinColor('Orange')">Oranye</button>
+                <button class="color-option-btn color-Yellow" onclick="submitMapPinColor('Yellow')" style="color:#333;">Kuning</button>
+                <button class="color-option-btn color-Violet" onclick="submitMapPinColor('Violet')">Ungu</button>
+                <button class="color-option-btn color-Pink" onclick="submitMapPinColor('Pink')">Pink</button>
+                <button class="color-option-btn color-Teal" onclick="submitMapPinColor('Teal')">Toska</button>
+                <button class="color-option-btn color-Navy" onclick="submitMapPinColor('Navy')">Navy</button>
+                <button class="color-option-btn color-Cyan" onclick="submitMapPinColor('Cyan')" style="color:#333;">Cyan</button>
+                <button class="color-option-btn color-Brown" onclick="submitMapPinColor('Brown')">Coklat</button>
+                <button class="color-option-btn color-Gray" onclick="submitMapPinColor('Gray')">Abu-abu</button>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="color-cancel-btn" onclick="closeMapPinModal()">Batal</button>
+                <button class="upload-btn" style="width:100%; justify-content:center; border:none; padding:9px;" onclick="saveMapPinChanges()">💾 Simpan</button>
             </div>
         </div>
     </div>
@@ -293,14 +420,14 @@
             <div class="card" style="margin-bottom: 0;">
                 <div class="card-header">
                     <span>Area Lokasi Kerja</span>
-                    <span id="mapInstructionHint" style="font-size: 0.75rem; color: #718096;">💡 Geser pin untuk ubah posisi</span>
+                    <span id="mapInstructionHint" style="font-size: 0.75rem; color: #718096;">💡 Klik area peta untuk tambah pin / geser pin</span>
                 </div>
                 <div class="card-body">
-                    <div class="map-container" id="mapWrapper">
+                    <div class="map-container" id="mapWrapper" style="cursor: crosshair;">
                         <img src="peta_site.jpg" alt="Peta Site" id="siteMapImg" onerror="this.src='https://via.placeholder.com/600x450?text=Peta+Site+Belum+Tersedia'">
                     </div>
                     <div class="coordinate-helper">
-                        <span>Status Pin:</span> <strong id="coordResult">Geser atau klik pin di atas</strong>
+                        <span>Status Peta:</span> <strong id="coordResult">Klik pada peta untuk menambah pin baru</strong>
                     </div>
                 </div>
             </div>
@@ -328,12 +455,22 @@
 
         <div id="dataTableSection" style="display: none;">
             <div class="card">
-                <div class="card-header">Daftar & Uraian Pekerjaan Kontraktor</div>
+                <div class="card-header">
+                    <span>Daftar & Uraian Pekerjaan Kontraktor</span>
+                    <div class="table-action-group" id="tableActionGroupContainer">
+                        <div id="deleteRowWrapper" style="display: flex; align-items: center; gap: 5px;">
+                            <select id="deleteRowSelect" class="delete-row-select">
+                                <option value="">-- Pilih Baris yang Dihapus --</option>
+                            </select>
+                            <button type="button" onclick="hapusBarisTerpilih()" class="btn-delete-action">🗑️ Hapus Baris</button>
+                        </div>
+                    </div>
+                </div>
                 <div style="overflow-x: auto;">
-                    <table class="data-table">
+                    <table class="data-table" id="tabelDaftarKontraktor">
                         <thead>
                             <tr>
-                                <th style="width: 25%;">Nama Kontraktor & Pekerja</th>
+                                <th style="width: 25%;">Nama Kontraktor, Pekerja & Judul</th>
                                 <th style="width: 27%;">Uraian Pekerjaan</th>
                                 <th style="width: 14%; text-align: center;">Izin SIKA Utama</th>
                                 <th style="width: 22%;">Izin SIKA Pendukung</th>
@@ -342,6 +479,20 @@
                         </thead>
                         <tbody id="tableBody"></tbody>
                     </table>
+                </div>
+                
+                <!-- Tombol Tambah Baris di Bawah Tabel (Hanya Muncul di Halaman Terakhir) -->
+                <div class="table-bottom-add-container" id="bottomAddRowContainer">
+                    <button type="button" id="bottomAddBtn" onclick="tambahBarisManual()" class="btn-add-row-bottom">
+                        ➕ Tambah Kontraktor / Baris Baru
+                    </button>
+                </div>
+
+                <!-- Tombol Navigasi Halaman Baris (Pagination per 5 Baris) -->
+                <div class="row-pagination-bar">
+                    <button id="btnRowPrev" onclick="ubahHalamanBaris(-1)">Previous</button>
+                    <span id="infoHalamanBaris">Halaman 1 dari 1</span>
+                    <button id="btnRowNext" onclick="ubahHalamanBaris(1)">Next</button>
                 </div>
             </div>
         </div>
@@ -353,6 +504,10 @@
             "vendor": { pass: "2701", role: "vendor" },
             "tamu": { pass: "123", role: "tamu" }
         };
+
+        let currentRowPage = 1;
+        const rowsPerPage = 5;
+        const initialDefaultRows = 15;
 
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('ft_boyolali_logged_in') === 'true') {
@@ -389,6 +544,7 @@
             const resetBtn = document.getElementById('resetPosBtn');
             const downloadBtn = document.getElementById('downloadExcelBtn');
             const mapHint = document.getElementById('mapInstructionHint');
+            const deleteRowWrapper = document.getElementById('deleteRowWrapper');
             const gsiSelect = document.getElementById('infoGsiSelect');
             const siSelect = document.getElementById('infoSiSelect');
             const atSelect = document.getElementById('infoAtSelect');
@@ -397,6 +553,7 @@
                 if (uploadWrapper) uploadWrapper.style.display = 'none';
                 if (resetBtn) resetBtn.style.display = 'none';
                 if (downloadBtn) downloadBtn.style.display = 'none';
+                if (deleteRowWrapper) deleteRowWrapper.style.display = 'none';
                 if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail pekerjaan';
                 document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Tamu (Viewer)</b>. Data diperbarui secara otomatis dari cloud.';
                 if(gsiSelect) gsiSelect.disabled = true;
@@ -405,16 +562,18 @@
             } else if (role === 'vendor') {
                 if (uploadWrapper) uploadWrapper.style.display = 'none';
                 if (resetBtn) resetBtn.style.display = 'none';
-                if (downloadBtn) downloadBtn.style.display = 'none'; // Tombol download disembunyikan untuk vendor
+                if (downloadBtn) downloadBtn.style.display = 'none';
+                if (deleteRowWrapper) deleteRowWrapper.style.display = 'none';
                 if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail pekerjaan';
-                document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Vendor</b>. Anda dapat mengubah Nama Kontraktor, Pekerja, Area, dan Uraian Pekerjaan.';
+                document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Vendor</b>. Anda dapat mengubah Nama Kontraktor, Judul, Pekerja, Area, dan Uraian Pekerjaan.';
                 if(gsiSelect) gsiSelect.disabled = true;
                 if(siSelect) siSelect.disabled = true;
                 if(atSelect) atSelect.disabled = true;
             } else {
                 if (uploadWrapper) uploadWrapper.style.display = 'flex';
-                if (downloadBtn) downloadBtn.style.display = 'flex'; // Tombol download ditampilkan untuk admin
-                if (mapHint) mapHint.innerText = '💡 Geser pin untuk memindahkan posisi';
+                if (downloadBtn) downloadBtn.style.display = 'flex';
+                if (deleteRowWrapper) deleteRowWrapper.style.display = 'flex';
+                if (mapHint) mapHint.innerText = '💡 Klik pada peta untuk tambah pin baru. Geser pin untuk memindahkan posisi.';
                 document.getElementById('welcomeDescText').innerHTML = 'Sistem monitoring aktif. Silakan upload Excel atau ubah data langsung.';
                 if(gsiSelect) gsiSelect.disabled = false;
                 if(siSelect) siSelect.disabled = false;
@@ -431,14 +590,9 @@
         let globalContractorData = [];
         let liveDatabaseState = {};
         let isUserTypingLocally = false;
-        let globalAvailableSikaOptions = [
-            "SIKA Panas (Hot Work Permit)", 
-            "SIKA Dingin (Cold Work Permit)", 
-            "SIKA Bekerja di Ketinggian (Working at Height)", 
-            "SIKA Ruang Terbatas (Confined Space Permit)", 
-            "SIKA Pekerjaan Perairan (Water Based)", 
-            "SIKA Penggalian (Excavation Permit)"
-        ];
+        
+        let activeContractorIndexForColorModal = null;
+        let activeEditingMapPin = null;
 
         function initRealtimeSync() {
             const dbRef = window.FB_ref(window.FB_DB, 'monitoring_data');
@@ -448,32 +602,31 @@
                     liveDatabaseState = val;
                     if (val.rawJson) {
                         globalContractorData = val.rawJson;
-                        extractSikaOptions(globalContractorData);
                         if (!isUserTypingLocally) {
                             processAndRender(globalContractorData);
                         }
                     }
                 } else {
-                    document.getElementById('welcomeMessageCard').style.display = 'flex';
-                    document.getElementById('welcomeTitleText').innerText = "Belum Ada Data di Cloud";
-                    document.getElementById('welcomeDescText').innerText = "Silakan login sebagai admin dan klik tombol 'Update Excel' untuk memuat data pertama kali.";
-                    document.getElementById('welcomeStatusBadge').innerText = "Status: Menunggu Upload Admin";
+                    globalContractorData = [];
+                    for (let i = 0; i < initialDefaultRows; i++) {
+                        globalContractorData.push({
+                            'Nama Kontraktor': '',
+                            'Judul Pekerjaan': '',
+                            'Area Kerja': '',
+                            'Jumlah Pekerja': 0,
+                            'Uraian Pekerjaan': '-',
+                            'Izin Kerja Utama': 'BELUM',
+                            'Izin Kerja Pendukung': '-',
+                            'Validasi H-1': 'BELUM',
+                            'Warna': 'Green',
+                            'Posisi Top': '50%',
+                            'Posisi Left': '50%'
+                        });
+                    }
+                    saveStateToCloud('rawJson', globalContractorData);
+                    processAndRender(globalContractorData);
                 }
             });
-        }
-
-        function extractSikaOptions(rawJson) {
-            let optionsSet = new Set(globalAvailableSikaOptions);
-            rawJson.forEach(row => {
-                const val = row['Izin Kerja Pendukung'];
-                if (val) {
-                    String(val).split(/,|\n|;/).forEach(item => {
-                        const clean = item.trim();
-                        if (clean && clean !== '-') optionsSet.add(clean);
-                    });
-                }
-            });
-            globalAvailableSikaOptions = Array.from(optionsSet);
         }
 
         function saveStateToCloud(updatedKey, updatedValue) {
@@ -500,10 +653,10 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    let json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
                     globalContractorData = json;
-                    extractSikaOptions(json);
+                    currentRowPage = 1;
                     saveStateToCloud('rawJson', json);
                     saveStateToCloud('customPositions', {});
                     saveStateToCloud('edits', {});
@@ -514,6 +667,79 @@
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        function tambahBarisManual() {
+            const currentRole = localStorage.getItem('ft_boyolali_role');
+            if (currentRole === 'tamu') return;
+
+            const newRowTemplate = {
+                'Nama Kontraktor': '',
+                'Judul Pekerjaan': '',
+                'Area Kerja': '',
+                'Jumlah Pekerja': 0,
+                'Uraian Pekerjaan': '-',
+                'Izin Kerja Utama': 'BELUM',
+                'Izin Kerja Pendukung': '-',
+                'Validasi H-1': 'BELUM',
+                'Warna': 'Green',
+                'Posisi Top': '50%',
+                'Posisi Left': '50%'
+            };
+
+            globalContractorData.push(newRowTemplate);
+            currentRowPage = Math.ceil(globalContractorData.length / rowsPerPage);
+            saveStateToCloud('rawJson', globalContractorData);
+            processAndRender(globalContractorData);
+        }
+
+        function hapusBarisTerpilih() {
+            const currentRole = localStorage.getItem('ft_boyolali_role');
+            if (currentRole !== 'admin') return;
+
+            const selectEl = document.getElementById('deleteRowSelect');
+            const selectedVal = selectEl.value;
+
+            if (selectedVal === "") {
+                alert("Silakan pilih nomor/nama baris yang ingin dihapus terlebih dahulu pada dropdown.");
+                return;
+            }
+
+            const index = parseInt(selectedVal);
+            const contractorName = globalContractorData[index]?.['Nama Kontraktor'] || `Baris #${index + 1}`;
+
+            if (confirm(`Apakah Anda yakin ingin menghapus "${contractorName}" (Baris nomor ${index + 1})?`)) {
+                globalContractorData.splice(index, 1);
+
+                if (liveDatabaseState.edits) {
+                    let newEdits = {};
+                    Object.keys(liveDatabaseState.edits).forEach(k => {
+                        let idx = parseInt(k);
+                        if (idx < index) newEdits[idx] = liveDatabaseState.edits[idx];
+                        else if (idx > index) newEdits[idx - 1] = liveDatabaseState.edits[idx];
+                    });
+                    liveDatabaseState.edits = newEdits;
+                }
+
+                if (liveDatabaseState.customPositions) {
+                    let newPos = {};
+                    Object.keys(liveDatabaseState.customPositions).forEach(k => {
+                        let idx = parseInt(k);
+                        if (idx < index) newPos[idx] = liveDatabaseState.customPositions[idx];
+                        else if (idx > index) newPos[idx - 1] = liveDatabaseState.customPositions[idx];
+                    });
+                    liveDatabaseState.customPositions = newPos;
+                }
+
+                let totalPages = Math.ceil(globalContractorData.length / rowsPerPage) || 1;
+                if (currentRowPage > totalPages) currentRowPage = totalPages;
+
+                saveStateToCloud('rawJson', globalContractorData);
+                saveStateToCloud('edits', liveDatabaseState.edits || {});
+                saveStateToCloud('customPositions', liveDatabaseState.customPositions || {});
+                processAndRender(globalContractorData);
+                alert("✅ Baris berhasil dihapus.");
+            }
         }
 
         function getThemeClass(val) {
@@ -536,15 +762,105 @@
         }
 
         function focusContractor(index) {
+            const targetPage = Math.floor(index / rowsPerPage) + 1;
+            if (targetPage !== currentRowPage) {
+                currentRowPage = targetPage;
+                processAndRender(globalContractorData);
+            }
+
             document.querySelectorAll('.map-pin').forEach(p => p.classList.remove('highlight'));
             document.querySelectorAll('.contractor-row').forEach(r => r.classList.remove('highlight-row'));
-            const targetPin = document.getElementById(`pin-${index}`);
+            
+            document.querySelectorAll(`.map-pin-idx-${index}`).forEach(tp => tp.classList.add('highlight'));
+            
             const targetRow = document.getElementById(`row-${index}`);
-            if (targetPin) targetPin.classList.add('highlight');
             if (targetRow) {
                 targetRow.classList.add('highlight-row');
                 targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+        }
+
+        function handleDotIndicatorClick(index) {
+            const role = localStorage.getItem('ft_boyolali_role');
+            if (role === 'admin') {
+                activeContractorIndexForColorModal = index;
+                document.getElementById('colorPickerModal').style.display = 'flex';
+            } else {
+                focusContractor(index);
+            }
+        }
+
+        function closeColorPickerModal() {
+            document.getElementById('colorPickerModal').style.display = 'none';
+            activeContractorIndexForColorModal = null;
+        }
+
+        function setContractorDotColor(colorName) {
+            if (activeContractorIndexForColorModal === null) return;
+            const index = activeContractorIndexForColorModal;
+
+            if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
+            if (!liveDatabaseState.customPositions[index]) liveDatabaseState.customPositions[index] = {};
+
+            if (!liveDatabaseState.customPositions[index][0]) {
+                liveDatabaseState.customPositions[index][0] = {
+                    top: globalContractorData[index]['Posisi Top'] || '50%',
+                    left: globalContractorData[index]['Posisi Left'] || '50%',
+                    color: colorName,
+                    pinNumber: index + 1
+                };
+            }
+
+            Object.keys(liveDatabaseState.customPositions[index]).forEach(subIdx => {
+                liveDatabaseState.customPositions[index][subIdx].color = colorName;
+            });
+
+            saveStateToCloud('customPositions', liveDatabaseState.customPositions);
+            closeColorPickerModal();
+            processAndRender(globalContractorData);
+            focusContractor(index);
+        }
+
+        function handleMapPinClick(index, subIdx) {
+            const role = localStorage.getItem('ft_boyolali_role');
+            if (role === 'admin') {
+                activeEditingMapPin = { contractorIndex: index, pinSubIndex: subIdx };
+                const pinData = liveDatabaseState.customPositions[index][subIdx];
+                
+                document.getElementById('mapPinModalTitle').innerText = `Edit Pin #${pinData.pinNumber} (Kontr. #${index + 1})`;
+                document.getElementById('mapPinNumberInput').value = pinData.pinNumber;
+                document.getElementById('mapPinEditModal').style.display = 'flex';
+            } else {
+                focusContractor(index);
+            }
+        }
+
+        function closeMapPinModal() {
+            document.getElementById('mapPinEditModal').style.display = 'none';
+            activeEditingMapPin = null;
+        }
+
+        function submitMapPinColor(colorName) {
+            if (!activeEditingMapPin) return;
+            const { contractorIndex, pinSubIndex } = activeEditingMapPin;
+            liveDatabaseState.customPositions[contractorIndex][pinSubIndex].color = colorName;
+            saveMapPinChanges();
+        }
+
+        function saveMapPinChanges() {
+            if (!activeEditingMapPin) return;
+            const { contractorIndex, pinSubIndex } = activeEditingMapPin;
+            
+            const inputNumEl = document.getElementById('mapPinNumberInput');
+            const parsedNum = parseInt(inputNumEl.value);
+            if (!isNaN(parsedNum)) {
+                liveDatabaseState.customPositions[contractorIndex][pinSubIndex].pinNumber = parsedNum;
+            }
+
+            saveStateToCloud('customPositions', liveDatabaseState.customPositions);
+            closeMapPinModal();
+            processAndRender(globalContractorData);
+            focusContractor(contractorIndex);
         }
 
         function updateFieldEdit(index, fieldName, value) {
@@ -553,7 +869,7 @@
             if (role === 'tamu') return;
             
             if (role === 'vendor') {
-                const allowedVendorFields = ['kontraktor', 'jumlah_pekerja', 'area', 'uraian'];
+                const allowedVendorFields = ['kontraktor', 'judul', 'jumlah_pekerja', 'area', 'uraian'];
                 if (!allowedVendorFields.includes(fieldName)) return;
             }
 
@@ -608,24 +924,28 @@
             updateGlobalInfo(type, el.value);
         }
 
-        function updatePinPosition(index, top, left) {
+        function updatePinPosition(index, pinSubIndex, top, left) {
             if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
             if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
-            liveDatabaseState.customPositions[index] = { top, left };
+            if (!liveDatabaseState.customPositions[index]) liveDatabaseState.customPositions[index] = {};
+            if (!liveDatabaseState.customPositions[index][pinSubIndex]) liveDatabaseState.customPositions[index][pinSubIndex] = {};
+            
+            liveDatabaseState.customPositions[index][pinSubIndex].top = top;
+            liveDatabaseState.customPositions[index][pinSubIndex].left = left;
             saveStateToCloud('customPositions', liveDatabaseState.customPositions);
             document.getElementById('resetPosBtn').style.display = 'flex';
         }
 
         function resetAllPositions() {
             if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
-            if (confirm("Reset posisi pin?")) {
+            if (confirm("Reset seluruh posisi dan penambahan pin peta?")) {
                 liveDatabaseState.customPositions = {};
                 saveStateToCloud('customPositions', {});
                 document.getElementById('resetPosBtn').style.display = 'none';
+                processAndRender(globalContractorData);
             }
         }
 
-        // Fungsi Download Excel yang Sinkron Sepenuhnya dengan Kondisi di Web
         function downloadUpdatedExcel() {
             const currentRole = localStorage.getItem('ft_boyolali_role');
             if (currentRole === 'vendor' || currentRole === 'tamu') {
@@ -643,8 +963,8 @@
                 let newRow = { ...row };
                 const e = edits[idx] || {};
 
-                // 1. Ambil data teks & tabel yang diubah di web
                 if (e.kontraktor !== undefined) newRow['Nama Kontraktor'] = e.kontraktor;
+                if (e.judul !== undefined) newRow['Judul Pekerjaan'] = e.judul;
                 if (e.area !== undefined) newRow['Area Kerja'] = e.area;
                 if (e.jumlah_pekerja !== undefined) newRow['Jumlah Pekerja'] = e.jumlah_pekerja;
                 if (e.uraian !== undefined) newRow['Uraian Pekerjaan'] = e.uraian;
@@ -652,13 +972,14 @@
                 if (e.izin_pendukung !== undefined) newRow['Izin Kerja Pendukung'] = e.izin_pendukung;
                 if (e.validasi !== undefined) newRow['Validasi H-1'] = e.validasi;
 
-                // 2. Ambil data posisi Pin Peta (Top & Left) terbaru jika digeser di web
                 if (customPositions[idx]) {
-                    if (customPositions[idx].top !== undefined) newRow['Posisi Top'] = customPositions[idx].top;
-                    if (customPositions[idx].left !== undefined) newRow['Posisi Left'] = customPositions[idx].left;
+                    if (customPositions[idx][0]) {
+                        if (customPositions[idx][0].top !== undefined) newRow['Posisi Top'] = customPositions[idx][0].top;
+                        if (customPositions[idx][0].left !== undefined) newRow['Posisi Left'] = customPositions[idx][0].left;
+                        if (customPositions[idx][0].color !== undefined) newRow['Warna'] = customPositions[idx][0].color;
+                    }
                 }
 
-                // 3. Sesuaikan GSI, SI, dan AT sesuai dengan pilihan dropdown yang aktif di web
                 if (globalInfo.gsi) newRow['GSI'] = globalInfo.gsi;
                 if (globalInfo.si) newRow['SI'] = globalInfo.si;
                 if (globalInfo.at) newRow['AT'] = globalInfo.at;
@@ -666,7 +987,6 @@
                 return newRow;
             });
 
-            // Buat file Excel baru dari data yang sudah disesuaikan
             const worksheet = XLSX.utils.json_to_sheet(updatedData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Monitoring");
@@ -681,14 +1001,72 @@
             document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: ${total} Pekerja`;
         }
 
+        function ubahHalamanBaris(arah) {
+            const totalRows = globalContractorData.length;
+            const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+
+            currentRowPage += arah;
+            if (currentRowPage < 1) currentRowPage = 1;
+            if (currentRowPage > totalPages) currentRowPage = totalPages;
+
+            processAndRender(globalContractorData);
+        }
+
         function processAndRender(rawJson) {
+            const tableBody = document.getElementById('tableBody');
+            const mapWrapper = document.getElementById('mapWrapper');
+            const imgEl = document.getElementById('siteMapImg');
+            const deleteRowSelect = document.getElementById('deleteRowSelect');
+            const bottomAddContainer = document.getElementById('bottomAddRowContainer');
+
+            const currentRole = localStorage.getItem('ft_boyolali_role');
+            
+            const totalRows = rawJson ? rawJson.length : 0;
+            const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
+            if (currentRowPage > totalPages) currentRowPage = totalPages;
+
+            // Kontrol kemunculan tombol tambah baris di bawah: HANYA MUNCUL DI HALAMAN TERAKHIR DAN JIKA BUKAN TAMU
+            if (currentRole !== 'tamu' && currentRowPage === totalPages) {
+                bottomAddContainer.style.display = 'flex';
+            } else {
+                bottomAddContainer.style.display = 'none';
+            }
+
+            if (deleteRowSelect) {
+                let dropdownHtml = `<option value="">-- Pilih Baris yang Dihapus --</option>`;
+                if (rawJson && rawJson.length > 0) {
+                    rawJson.forEach((row, idx) => {
+                        const edits = liveDatabaseState.edits || {};
+                        const kontraktorName = edits[idx]?.kontraktor !== undefined ? edits[idx].kontraktor : (row['Nama Kontraktor'] || 'Tanpa Nama');
+                        const displayTitle = kontraktorName.trim() !== '' ? kontraktorName : '(Kontraktor Kosong)';
+                        dropdownHtml += `<option value="${idx}">Baris ${idx + 1}: ${displayTitle}</option>`;
+                    });
+                }
+                deleteRowSelect.innerHTML = dropdownHtml;
+            }
+
+            if (!rawJson || rawJson.length === 0) {
+                document.getElementById('welcomeMessageCard').style.display = 'flex';
+                document.getElementById('welcomeTitleText').innerText = "Belum Ada Data Kontraktor";
+                document.getElementById('welcomeDescText').innerText = "Klik tombol tambah baris di bawah atau upload file Excel untuk mulai mengelola data.";
+                document.getElementById('welcomeStatusBadge').innerText = "Status: Siap Digunakan";
+                
+                document.getElementById('topSectionGrid').style.display = 'grid';
+                document.getElementById('dataTableSection').style.display = 'block';
+                
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #a0aec0; padding: 25px;">Belum ada data. Silakan gunakan tombol tambah baris di bawah.</td></tr>`;
+                document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: 0`;
+                document.getElementById('btnRowPrev').disabled = true;
+                document.getElementById('btnRowNext').disabled = true;
+                document.getElementById('infoHalamanBaris').innerText = `Halaman 1 dari 1`;
+                if (currentRole !== 'tamu') bottomAddContainer.style.display = 'flex';
+                return;
+            }
+
             document.getElementById('welcomeMessageCard').style.display = 'none';
             document.getElementById('topSectionGrid').style.display = 'grid';
             document.getElementById('dataTableSection').style.display = 'block';
 
-            const currentRole = localStorage.getItem('ft_boyolali_role');
-            
-            // Tampilkan tombol download excel hanya untuk admin
             const downloadBtn = document.getElementById('downloadExcelBtn');
             if (currentRole === 'admin') {
                 downloadBtn.style.display = 'flex';
@@ -705,6 +1083,7 @@
             }
 
             let allGsi = new Set(), allSi = new Set(), allAt = new Set();
+            let availableSikaSet = new Set();
 
             const splitNames = (val, setObj) => {
                 if (!val) return;
@@ -718,6 +1097,7 @@
                 splitNames(row['GSI'], allGsi);
                 splitNames(row['SI'], allSi);
                 splitNames(row['AT'], allAt);
+                splitNames(row['Izin Kerja Pendukung'], availableSikaSet);
             });
 
             const setupDropdown = (elId, uniqueSet, key) => {
@@ -737,26 +1117,101 @@
             setupDropdown('infoSiSelect', allSi, 'si');
             setupDropdown('infoAtSelect', allAt, 'at');
 
-            const mapWrapper = document.getElementById('mapWrapper');
-            const imgEl = document.getElementById('siteMapImg');
-            const tableBody = document.getElementById('tableBody');
+            mapWrapper.onclick = function(e) {
+                if (currentRole !== 'admin') return;
+                if (e.target !== imgEl && e.target !== mapWrapper) return;
+
+                const rect = mapWrapper.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const leftPercent = ((x / rect.width) * 100).toFixed(1) + '%';
+                const topPercent = ((y / rect.height) * 100).toFixed(1) + '%';
+
+                const targetContractorIdx = 0; 
+                if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
+                if (!liveDatabaseState.customPositions[targetContractorIdx]) liveDatabaseState.customPositions[targetContractorIdx] = {};
+
+                const subIndices = Object.keys(liveDatabaseState.customPositions[targetContractorIdx]).map(k => parseInt(k));
+                const nextSubIdx = subIndices.length > 0 ? Math.max(...subIndices) + 1 : 0;
+
+                let maxPinNum = rawJson.length;
+                Object.keys(liveDatabaseState.customPositions).forEach(cIdx => {
+                    Object.keys(liveDatabaseState.customPositions[cIdx]).forEach(sIdx => {
+                        let pNum = liveDatabaseState.customPositions[cIdx][sIdx].pinNumber;
+                        if (pNum && pNum > maxPinNum) maxPinNum = pNum;
+                    });
+                });
+
+                const defaultColor = rawJson[targetContractorIdx]['Warna'] || 'Green';
+                liveDatabaseState.customPositions[targetContractorIdx][nextSubIdx] = {
+                    top: topPercent,
+                    left: leftPercent,
+                    color: defaultColor,
+                    pinNumber: maxPinNum + 1
+                };
+
+                saveStateToCloud('customPositions', liveDatabaseState.customPositions);
+                processAndRender(rawJson);
+            };
+
             tableBody.innerHTML = '';
             mapWrapper.innerHTML = '';
             mapWrapper.appendChild(imgEl);
 
-            rawJson.forEach((row, index) => {
-                const e = edits[index] || {};
-                let top = customPositions[index]?.top || String(row['Posisi Top'] || '50%');
-                let left = customPositions[index]?.left || String(row['Posisi Left'] || '50%');
+            const startIndex = (currentRowPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
+            const paginatedData = rawJson.slice(startIndex, endIndex);
 
-                const kontraktor = e.kontraktor !== undefined ? e.kontraktor : (row['Nama Kontraktor'] || '-');
-                const area = e.area !== undefined ? e.area : (row['Area Kerja'] || '-');
+            paginatedData.forEach((row, paginatedIdx) => {
+                const index = startIndex + paginatedIdx;
+                const e = edits[index] || {};
+                const defaultWarna = row['Warna'] || 'Green';
+                
+                let posObj = customPositions[index];
+                let positionsList = [];
+                
+                if (posObj && typeof posObj === 'object' && !posObj.top) {
+                    Object.keys(posObj).forEach(subIdx => {
+                        if (posObj[subIdx]) {
+                            positionsList.push({ 
+                                subIdx: parseInt(subIdx), 
+                                top: posObj[subIdx].top || '50%',
+                                left: posObj[subIdx].left || '50%',
+                                color: posObj[subIdx].color || defaultWarna,
+                                pinNumber: posObj[subIdx].pinNumber !== undefined ? posObj[subIdx].pinNumber : (index + 1)
+                            });
+                        }
+                    });
+                } else if (posObj && posObj.top) {
+                    positionsList.push({ 
+                        subIdx: 0, 
+                        top: posObj.top, 
+                        left: posObj.left, 
+                        color: posObj.color || defaultWarna,
+                        pinNumber: posObj.pinNumber !== undefined ? posObj.pinNumber : (index + 1) 
+                    });
+                } else {
+                    positionsList.push({
+                        subIdx: 0,
+                        top: String(row['Posisi Top'] || '50%'),
+                        left: String(row['Posisi Left'] || '50%'),
+                        color: defaultWarna,
+                        pinNumber: index + 1
+                    });
+                }
+
+                let tableDotColor = defaultWarna;
+                const foundBase = positionsList.find(p => p.subIdx === 0);
+                if (foundBase) tableDotColor = foundBase.color;
+
+                const kontraktor = e.kontraktor !== undefined ? e.kontraktor : (row['Nama Kontraktor'] || '');
+                const judul = e.judul !== undefined ? e.judul : (row['Judul Pekerjaan'] || '');
+                const area = e.area !== undefined ? e.area : (row['Area Kerja'] || '');
                 const jumlah = e.jumlah_pekerja !== undefined ? e.jumlah_pekerja : (parseInt(row['Jumlah Pekerja']) || 0);
                 const uraian = e.uraian !== undefined ? e.uraian : (row['Uraian Pekerjaan'] || '-');
                 const izin = (e.izin_kerja !== undefined ? e.izin_kerja : (row['Izin Kerja Utama'] || 'BELUM')).toUpperCase();
                 const izinPendukungVal = e.izin_pendukung !== undefined ? e.izin_pendukung : (row['Izin Kerja Pendukung'] || '-');
                 const validasi = (e.validasi !== undefined ? e.validasi : (row['Validasi H-1'] || 'BELUM')).toUpperCase();
-                const warna = row['Warna'] || 'Green';
                 
                 const isReadOnlyAll = (currentRole === 'tamu');
                 const isReadOnlyRest = (currentRole === 'tamu' || currentRole === 'vendor');
@@ -771,11 +1226,11 @@
                     let currentSelectedSika = sikaPendukungValues[i] || '-';
                     
                     let optionsHtml = `<option value="-">- (Tidak Ada)</option>`;
-                    globalAvailableSikaOptions.forEach(opt => {
+                    availableSikaSet.forEach(opt => {
                         const isSelected = currentSelectedSika.toLowerCase() === opt.toLowerCase() ? 'selected' : '';
                         optionsHtml += `<option value="${opt}" ${isSelected}>${opt}</option>`;
                     });
-                    if (currentSelectedSika !== '-' && !globalAvailableSikaOptions.some(o => o.toLowerCase() === currentSelectedSika.toLowerCase())) {
+                    if (currentSelectedSika !== '-' && !Array.from(availableSikaSet).some(o => o.toLowerCase() === currentSelectedSika.toLowerCase())) {
                         optionsHtml += `<option value="${currentSelectedSika}" selected>${currentSelectedSika}</option>`;
                     }
 
@@ -793,15 +1248,20 @@
                 tr.id = `row-${index}`;
                 tr.onclick = () => focusContractor(index);
 
+                const dotTitle = currentRole === 'admin' ? 'Klik untuk memilih warna indikator kontraktor ini' : 'Klik untuk fokus pada pin kontraktor';
+
                 tr.innerHTML = `
                     <td>
                         <div class="contractor-name-wrapper" onclick="event.stopPropagation();">
-                            <span class="dot-indicator color-${warna}" onclick="focusContractor(${index})"></span>
-                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)">
+                            <span class="dot-indicator color-${tableDotColor}" title="${dotTitle}" onclick="handleDotIndicatorClick(${index})"></span>
+                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)" placeholder="Nama Kontraktor">
                             <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
                         </div>
-                        <div style="padding-left: 20px;" onclick="event.stopPropagation();">
-                            <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" style="font-size: 0.78rem; color: #718096;">
+                        <div style="padding-left: 22px; margin-bottom: 4px;" onclick="event.stopPropagation();">
+                            <input type="text" class="editable-input" value="${judul}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'judul', this.value)" placeholder="Judul Pekerjaan" style="font-weight: 600; color: #2b6cb0;">
+                        </div>
+                        <div style="padding-left: 22px;" onclick="event.stopPropagation();">
+                            <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" placeholder="Area Kerja" style="font-size: 0.78rem; color: #718096;">
                         </div>
                     </td>
                     <td>
@@ -835,47 +1295,54 @@
 
                 tr.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
 
-                const pin = document.createElement('div');
-                pin.className = `map-pin color-${warna}`;
-                pin.id = `pin-${index}`;
-                pin.style.top = top;
-                pin.style.left = left;
-                pin.innerText = index + 1;
+                positionsList.forEach((posCoord) => {
+                    const subIdx = posCoord.subIdx;
+                    const pin = document.createElement('div');
+                    pin.className = `map-pin color-${posCoord.color} map-pin-idx-${index}`;
+                    pin.id = `pin-${index}-${subIdx}`;
+                    pin.style.top = posCoord.top;
+                    pin.style.left = posCoord.left;
+                    pin.innerText = posCoord.pinNumber;
 
-                pin.addEventListener('mousedown', (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
+                    pin.addEventListener('mousedown', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
 
-                    let isDragging = false;
-                    const startX = e.clientX, startY = e.clientY;
+                        let isDragging = false;
+                        const startX = e.clientX, startY = e.clientY;
 
-                    const onMouseMove = (ev) => {
-                        ev.stopPropagation();
-                        if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) isDragging = true;
-                        const rect = mapWrapper.getBoundingClientRect();
-                        let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
-                        let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
-                        pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
-                        pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
-                    };
+                        const onMouseMove = (ev) => {
+                            ev.stopPropagation();
+                            if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) isDragging = true;
+                            const rect = mapWrapper.getBoundingClientRect();
+                            let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+                            let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
+                            pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
+                            pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
+                        };
 
-                    const onMouseUp = (ev) => {
-                        ev.stopPropagation();
-                        window.removeEventListener('mousemove', onMouseMove);
-                        window.removeEventListener('mouseup', onMouseUp);
-                        if (isDragging) {
-                            updatePinPosition(index, pin.style.top, pin.style.left);
-                        } else {
-                            focusContractor(index);
-                        }
-                    };
-                    window.addEventListener('mousemove', onMouseMove);
-                    window.addEventListener('mouseup', onMouseUp);
+                        const onMouseUp = (ev) => {
+                            ev.stopPropagation();
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                            if (isDragging) {
+                                updatePinPosition(index, subIdx, pin.style.top, pin.style.left);
+                            } else {
+                                handleMapPinClick(index, subIdx);
+                            }
+                        };
+                        window.addEventListener('mousemove', onMouseMove);
+                        window.addEventListener('mouseup', onMouseUp);
+                    });
+
+                    mapWrapper.appendChild(pin);
                 });
-
-                mapWrapper.appendChild(pin);
             });
+
+            document.getElementById('btnRowPrev').disabled = currentRowPage === 1;
+            document.getElementById('btnRowNext').disabled = currentRowPage >= totalPages;
+            document.getElementById('infoHalamanBaris').innerText = `Halaman ${currentRowPage} dari ${totalPages} (Total ${totalRows} Data)`;
 
             recalculateTotalPekerja();
         }
