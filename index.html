@@ -102,18 +102,6 @@
         .action-btn.logout-btn:hover { background: #707b7c; }
         .upload-btn input { display: none; }
 
-        .table-action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .btn-delete-action {
-            background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 10px;
-            border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: background 0.2s;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .btn-delete-action:hover { background: #fecaca; }
-        .delete-row-select {
-            padding: 4px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;
-            border: 1px solid #cbd5e1; outline: none; background: #fff; color: #334155; cursor: pointer;
-        }
-
         .running-text-container {
             background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
             padding: 10px 15px; margin-bottom: 25px; display: flex; align-items: center;
@@ -133,8 +121,6 @@
             .upload-btn, .action-btn { justify-content: center; padding: 9px 10px; font-size: 0.8rem; }
             .header-title h1 { font-size: 1.15rem; }
             .main-wrapper { padding: 10px; }
-            .table-action-group { width: 100%; flex-direction: column; align-items: stretch; }
-            .delete-row-select, .btn-delete-action { width: 100%; justify-content: center; }
         }
 
         .top-section-grid { display: grid; grid-template-columns: 420px 1fr; gap: 25px; margin-bottom: 25px; }
@@ -165,7 +151,7 @@
 
         .coordinate-helper {
             margin-top: 10px; background: #eef2f7; padding: 10px 12px; border-radius: 6px;
-            font-size: 0.82rem; color: #2c3e50; border: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;
+            font-size: 0.82rem; color: #2c3e50; border: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
         }
         .coordinate-helper span { font-weight: bold; color: #d97706; }
 
@@ -282,6 +268,29 @@
             z-index: 10000; backdrop-filter: blur(3px); padding: 15px;
         }
 
+        /* MODAL POP-UP FOTO */
+        #photoPopupModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
+            z-index: 20000; backdrop-filter: blur(5px); padding: 20px; flex-direction: column;
+        }
+        .photo-popup-content {
+            position: relative; max-width: 90%; max-height: 85vh; text-align: center;
+        }
+        .photo-popup-content img {
+            max-width: 100%; max-height: 80vh; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.2); object-fit: contain; display: block; margin: 0 auto;
+        }
+        .photo-popup-close {
+            position: absolute; top: -40px; right: 0; background: #e74c3c; color: white; border: none;
+            width: 35px; height: 35px; border-radius: 50%; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: background 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .photo-popup-close:hover { background: #c0392b; }
+        .photo-popup-caption {
+            color: white; margin-top: 15px; font-size: 1rem; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
         .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .info-box label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 8px; }
@@ -296,13 +305,11 @@
         .welcome-container-full p { font-size: 1rem; color: #64748b; max-width: 650px; line-height: 1.6; margin-bottom: 25px; }
         .welcome-badge { background: #eef2f7; color: #1e293b; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; border: 1px solid #cbd5e1; }
 
-        /* Styling Tombol Navigasi Halaman Baris */
         .row-pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: #fafbfc; border-top: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
         .row-pagination-bar button { padding: 8px 16px; cursor: pointer; background: #0b2545; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
         .row-pagination-bar button:disabled { background: #cbd5e1; cursor: not-allowed; }
         .row-pagination-bar span { font-size: 0.85rem; font-weight: 600; color: #475569; }
 
-        /* Style Tombol Tambah Baris di Bawah Tabel */
         .table-bottom-add-container {
             padding: 15px; background: #fdfdfd; border-top: 1px solid #edf2f7; text-align: center; display: none; justify-content: center; align-items: center;
         }
@@ -344,7 +351,7 @@
         </div>
     </div>
 
-    <!-- Modal Pilihan Warna -->
+    <!-- Modal Pilihan Warna Kontraktor -->
     <div id="colorPickerModal">
         <div class="color-picker-card">
             <h3>Pilih Warna Kontraktor</h3>
@@ -397,6 +404,15 @@
                 <button class="color-cancel-btn" onclick="closeMapPinModal()">Batal</button>
                 <button class="upload-btn" style="width:100%; justify-content:center; border:none; padding:11px;" onclick="saveMapPinChanges()">💾 Simpan</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP FOTO DARI FOLDER -->
+    <div id="photoPopupModal" onclick="closePhotoPopup()">
+        <div class="photo-popup-content" onclick="event.stopPropagation()">
+            <button class="photo-popup-close" onclick="closePhotoPopup()">×</button>
+            <img id="popupImageElement" src="" alt="Foto Pop-Up">
+            <div class="photo-popup-caption" id="popupImageCaption">Foto Dokumentasi</div>
         </div>
     </div>
 
@@ -480,14 +496,6 @@
             <div class="card">
                 <div class="card-header">
                     <span>Daftar & Uraian Pekerjaan Kontraktor</span>
-                    <div class="table-action-group" id="tableActionGroupContainer">
-                        <div id="deleteRowWrapper" style="display: flex; align-items: center; gap: 5px; width: 100%;">
-                            <select id="deleteRowSelect" class="delete-row-select" style="flex:1;">
-                                <option value="">-- Pilih Baris yang Dihapus --</option>
-                            </select>
-                            <button type="button" onclick="hapusBarisTerpilih()" class="btn-delete-action">🗑️ Hapus</button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- TAMPILAN DESKTOP (TABEL) -->
@@ -549,6 +557,25 @@
             initRealtimeSync();
         });
 
+        // ==========================================
+        // FUNGSI POP-UP FOTO DARI FOLDER LOKAL
+        // ==========================================
+        function openPhotoPopup(imageFilename, captionText) {
+            const modal = document.getElementById('photoPopupModal');
+            const imgEl = document.getElementById('popupImageElement');
+            const captionEl = document.getElementById('popupImageCaption');
+
+            imgEl.src = imageFilename; // Mengambil file foto dari folder lokal yang sama
+            captionEl.innerText = captionText || 'Dokumentasi Pekerjaan';
+            modal.style.display = 'flex';
+        }
+
+        function closePhotoPopup() {
+            const modal = document.getElementById('photoPopupModal');
+            modal.style.display = 'none';
+            document.getElementById('popupImageElement').src = '';
+        }
+
         function handleLogin(e) {
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim().toLowerCase();
@@ -562,8 +589,27 @@
                 applyUserRoleUI(role);
                 document.getElementById('loginOverlay').style.display = 'none';
                 errEl.style.display = 'none';
+
+                // --- POP-UP OTOMATIS SETELAH BERHASIL LOGIN ---
+                triggerAutoPopupOnLogin(role);
             } else {
                 errEl.style.display = 'block';
+            }
+        }
+
+        function triggerAutoPopupOnLogin(role) {
+            if (role === 'admin') {
+                setTimeout(() => {
+                    openPhotoPopup('popup.PNG', 'INFORMASI NEW SIKA');
+                }, 500);
+            } else if (role === 'vendor') {
+                setTimeout(() => {
+                    openPhotoPopup('popup.PNG', 'INFORMASI NEW SIKA');
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    openPhotoPopup('popup.PNG', 'INFORMASI NEW SIKA');
+                }, 500);
             }
         }
 
@@ -572,7 +618,6 @@
             const resetBtn = document.getElementById('resetPosBtn');
             const downloadBtn = document.getElementById('downloadExcelBtn');
             const mapHint = document.getElementById('mapInstructionHint');
-            const deleteRowWrapper = document.getElementById('deleteRowWrapper');
             const gsiSelect = document.getElementById('infoGsiSelect');
             const siSelect = document.getElementById('infoSiSelect');
             const atSelect = document.getElementById('infoAtSelect');
@@ -581,7 +626,6 @@
                 if (uploadWrapper) uploadWrapper.style.display = 'none';
                 if (resetBtn) resetBtn.style.display = 'none';
                 if (downloadBtn) downloadBtn.style.display = 'none';
-                if (deleteRowWrapper) deleteRowWrapper.style.display = 'none';
                 if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail';
                 document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Tamu (Viewer)</b>. Data diperbarui secara otomatis dari cloud.';
                 if(gsiSelect) gsiSelect.disabled = true;
@@ -591,7 +635,6 @@
                 if (uploadWrapper) uploadWrapper.style.display = 'none';
                 if (resetBtn) resetBtn.style.display = 'none';
                 if (downloadBtn) downloadBtn.style.display = 'none';
-                if (deleteRowWrapper) deleteRowWrapper.style.display = 'none';
                 if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail';
                 document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Vendor</b>. Anda dapat mengubah Nama Kontraktor, Judul, Pekerja, Area, dan Uraian Pekerjaan.';
                 if(gsiSelect) gsiSelect.disabled = true;
@@ -600,7 +643,6 @@
             } else {
                 if (uploadWrapper) uploadWrapper.style.display = 'flex';
                 if (downloadBtn) downloadBtn.style.display = 'flex';
-                if (deleteRowWrapper) deleteRowWrapper.style.display = 'flex';
                 if (mapHint) mapHint.innerText = '💡 Klik peta untuk tambah/geser pin';
                 document.getElementById('welcomeDescText').innerHTML = 'Sistem monitoring aktif. Silakan upload Excel atau ubah data langsung.';
                 if(gsiSelect) gsiSelect.disabled = false;
@@ -720,55 +762,6 @@
             currentRowPage = Math.ceil(globalContractorData.length / rowsPerPage);
             saveStateToCloud('rawJson', globalContractorData);
             processAndRender(globalContractorData);
-        }
-
-        function hapusBarisTerpilih() {
-            const currentRole = localStorage.getItem('ft_boyolali_role');
-            if (currentRole !== 'admin') return;
-
-            const selectEl = document.getElementById('deleteRowSelect');
-            const selectedVal = selectEl.value;
-
-            if (selectedVal === "") {
-                alert("Silakan pilih nomor/nama baris yang ingin dihapus terlebih dahulu pada dropdown.");
-                return;
-            }
-
-            const index = parseInt(selectedVal);
-            const contractorName = globalContractorData[index]?.['Nama Kontraktor'] || `Baris #${index + 1}`;
-
-            if (confirm(`Apakah Anda yakin ingin menghapus "${contractorName}" (Baris nomor ${index + 1})?`)) {
-                globalContractorData.splice(index, 1);
-
-                if (liveDatabaseState.edits) {
-                    let newEdits = {};
-                    Object.keys(liveDatabaseState.edits).forEach(k => {
-                        let idx = parseInt(k);
-                        if (idx < index) newEdits[idx] = liveDatabaseState.edits[idx];
-                        else if (idx > index) newEdits[idx - 1] = liveDatabaseState.edits[idx];
-                    });
-                    liveDatabaseState.edits = newEdits;
-                }
-
-                if (liveDatabaseState.customPositions) {
-                    let newPos = {};
-                    Object.keys(liveDatabaseState.customPositions).forEach(k => {
-                        let idx = parseInt(k);
-                        if (idx < index) newPos[idx] = liveDatabaseState.customPositions[idx];
-                        else if (idx > index) newPos[idx - 1] = liveDatabaseState.customPositions[idx];
-                    });
-                    liveDatabaseState.customPositions = newPos;
-                }
-
-                let totalPages = Math.ceil(globalContractorData.length / rowsPerPage) || 1;
-                if (currentRowPage > totalPages) currentRowPage = totalPages;
-
-                saveStateToCloud('rawJson', globalContractorData);
-                saveStateToCloud('edits', liveDatabaseState.edits || {});
-                saveStateToCloud('customPositions', liveDatabaseState.customPositions || {});
-                processAndRender(globalContractorData);
-                alert("✅ Baris berhasil dihapus.");
-            }
         }
 
         function getThemeClass(val) {
@@ -1090,7 +1083,6 @@
             const tableBodyMobile = document.getElementById('tableBodyMobile');
             const mapWrapper = document.getElementById('mapWrapper');
             const imgEl = document.getElementById('siteMapImg');
-            const deleteRowSelect = document.getElementById('deleteRowSelect');
             const bottomAddContainer = document.getElementById('bottomAddRowContainer');
 
             const currentRole = localStorage.getItem('ft_boyolali_role');
@@ -1103,19 +1095,6 @@
                 bottomAddContainer.style.display = 'flex';
             } else {
                 bottomAddContainer.style.display = 'none';
-            }
-
-            if (deleteRowSelect) {
-                let dropdownHtml = `<option value="">-- Pilih Baris yang Dihapus --</option>`;
-                if (rawJson && rawJson.length > 0) {
-                    rawJson.forEach((row, idx) => {
-                        const edits = liveDatabaseState.edits || {};
-                        const kontraktorName = edits[idx]?.kontraktor !== undefined ? edits[idx].kontraktor : (row['Nama Kontraktor'] || 'Tanpa Nama');
-                        const displayTitle = kontraktorName.trim() !== '' ? kontraktorName : '(Kontraktor Kosong)';
-                        dropdownHtml += `<option value="${idx}">Baris ${idx + 1}: ${displayTitle}</option>`;
-                    });
-                }
-                deleteRowSelect.innerHTML = dropdownHtml;
             }
 
             if (!rawJson || rawJson.length === 0) {
@@ -1476,7 +1455,6 @@
                         window.addEventListener('mouseup', onMouseUp);
                     });
 
-                    // Dukungan Sentuhan Touch (Mobile Drag / Tap)
                     pin.addEventListener('touchstart', (e) => {
                         e.stopPropagation();
                         if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
