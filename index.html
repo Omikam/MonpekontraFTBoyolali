@@ -546,6 +546,30 @@
         const initialDefaultRows = 15;
 
         // ==========================================
+        // FITUR AUTO LOGOUT KETIKA KELUAR BROWSER / TAB
+        // ==========================================
+        window.addEventListener('beforeunload', function () {
+            // Hapus sesi login dari sessionStorage saat tab atau browser ditutup sepenuhnya
+            sessionStorage.removeItem('ft_boyolali_logged_in');
+            sessionStorage.removeItem('ft_boyolali_role');
+        });
+
+        // Cek sesi saat halaman dimuat ulang / dibuka kembali via link
+        window.addEventListener('DOMContentLoaded', () => {
+            const isLogged = sessionStorage.getItem('ft_boyolali_logged_in');
+            if (isLogged === 'true') {
+                const role = sessionStorage.getItem('ft_boyolali_role') || 'admin';
+                applyUserRoleUI(role);
+                document.getElementById('loginOverlay').style.display = 'none';
+                resetInactivityTimer();
+                triggerAutoScrollAfterLogin();
+            } else {
+                // Jika belum ada sesi sessionStorage (artinya tab baru / habis ditutup), pastikan form login muncul
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        });
+
+        // ==========================================
         // FITUR AUTO LOGOUT SETELAH 10 MENIT TIDAK ADA AKTIVITAS
         // ==========================================
         let inactivityTimer;
@@ -569,16 +593,6 @@
             });
             resetInactivityTimer();
         };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('ft_boyolali_logged_in') === 'true') {
-                const role = localStorage.getItem('ft_boyolali_role') || 'admin';
-                applyUserRoleUI(role);
-                document.getElementById('loginOverlay').style.display = 'none';
-                resetInactivityTimer();
-                triggerAutoScrollAfterLogin();
-            }
-        });
 
         window.addEventListener('firebase-ready', () => {
             initRealtimeSync();
@@ -611,8 +625,9 @@
 
             if (CREDENTIALS[user] && CREDENTIALS[user].pass === pass) {
                 const role = CREDENTIALS[user].role;
-                localStorage.setItem('ft_boyolali_logged_in', 'true');
-                localStorage.setItem('ft_boyolali_role', role);
+                // Menggunakan sessionStorage agar otomatis terhapus saat browser/tab ditutup
+                sessionStorage.setItem('ft_boyolali_logged_in', 'true');
+                sessionStorage.setItem('ft_boyolali_role', role);
                 applyUserRoleUI(role);
                 document.getElementById('loginOverlay').style.display = 'none';
                 errEl.style.display = 'none';
@@ -673,8 +688,8 @@
 
         function handleLogout() {
             clearTimeout(inactivityTimer);
-            localStorage.removeItem('ft_boyolali_logged_in');
-            localStorage.removeItem('ft_boyolali_role');
+            sessionStorage.removeItem('ft_boyolali_logged_in');
+            sessionStorage.removeItem('ft_boyolali_role');
             document.getElementById('loginOverlay').style.display = 'flex';
             stopAutoScroll(); // Hentikan auto-scroll saat logout
         }
@@ -722,7 +737,7 @@
         }
 
         function saveStateToCloud(updatedKey, updatedValue) {
-            const currentRole = localStorage.getItem('ft_boyolali_role');
+            const currentRole = sessionStorage.getItem('ft_boyolali_role');
             if (currentRole === 'tamu') return;
             liveDatabaseState[updatedKey] = updatedValue;
             window.FB_set(window.FB_ref(window.FB_DB, 'monitoring_data'), liveDatabaseState);
@@ -736,7 +751,7 @@
         updateClock();
 
         function handleExcelUpload(event) {
-            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (sessionStorage.getItem('ft_boyolali_role') !== 'admin') return;
             const file = event.target.files[0];
             if (!file) return;
 
@@ -763,7 +778,7 @@
         }
 
         function tambahBarisManual() {
-            const currentRole = localStorage.getItem('ft_boyolali_role');
+            const currentRole = sessionStorage.getItem('ft_boyolali_role');
             if (currentRole === 'tamu') return;
 
             const newRowTemplate = {
@@ -832,7 +847,7 @@
         }
 
         function handleDotIndicatorClick(index) {
-            const role = localStorage.getItem('ft_boyolali_role');
+            const role = sessionStorage.getItem('ft_boyolali_role');
             if (role === 'admin') {
                 activeContractorIndexForColorModal = index;
                 document.getElementById('colorPickerModal').style.display = 'flex';
@@ -881,7 +896,7 @@
         }
 
         function handleMapPinClick(index, subIdx) {
-            const role = localStorage.getItem('ft_boyolali_role');
+            const role = sessionStorage.getItem('ft_boyolali_role');
             if (role === 'admin') {
                 activeEditingMapPin = { contractorIndex: index, pinSubIndex: subIdx };
                 const pinData = liveDatabaseState.customPositions[index][subIdx];
@@ -939,7 +954,7 @@
 
         function updateFieldEdit(index, fieldName, value) {
             isUserTypingLocally = false;
-            const role = localStorage.getItem('ft_boyolali_role');
+            const role = sessionStorage.getItem('ft_boyolali_role');
             if (role === 'tamu') return;
             
             if (role === 'vendor') {
@@ -967,7 +982,7 @@
 
         function updateSikaPendukungItem(rowIndex, sikaIndex, value) {
             isUserTypingLocally = false;
-            const role = localStorage.getItem('ft_boyolali_role');
+            const role = sessionStorage.getItem('ft_boyolali_role');
             if (role === 'tamu' || role === 'vendor') return;
             
             const row = globalContractorData[rowIndex] || {};
@@ -998,7 +1013,7 @@
         }
 
         function updateGlobalInfo(type, val) {
-            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (sessionStorage.getItem('ft_boyolali_role') !== 'admin') return;
             if (!liveDatabaseState.globalInfo) liveDatabaseState.globalInfo = {};
             liveDatabaseState.globalInfo[type] = val;
             saveStateToCloud('globalInfo', liveDatabaseState.globalInfo);
@@ -1010,7 +1025,7 @@
         }
 
         function updatePinPosition(index, pinSubIndex, top, left) {
-            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (sessionStorage.getItem('ft_boyolali_role') !== 'admin') return;
             if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
             
             if (!liveDatabaseState.positionHistory) liveDatabaseState.positionHistory = [];
@@ -1027,7 +1042,7 @@
         }
 
         function resetAllPositions() {
-            if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
+            if (sessionStorage.getItem('ft_boyolali_role') !== 'admin') return;
             
             let history = liveDatabaseState.positionHistory || [];
             
@@ -1053,7 +1068,7 @@
         }
 
         function downloadUpdatedExcel() {
-            const currentRole = localStorage.getItem('ft_boyolali_role');
+            const currentRole = sessionStorage.getItem('ft_boyolali_role');
             if (currentRole === 'vendor' || currentRole === 'tamu') {
                 alert("❌ Anda tidak memiliki hak akses untuk mendownload file Excel.");
                 return;
@@ -1255,7 +1270,7 @@
             const imgEl = document.getElementById('siteMapImg');
             const bottomAddContainer = document.getElementById('bottomAddRowContainer');
 
-            const currentRole = localStorage.getItem('ft_boyolali_role');
+            const currentRole = sessionStorage.getItem('ft_boyolali_role');
             
             const totalRows = rawJson ? rawJson.length : 0;
             const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
