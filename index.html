@@ -190,7 +190,7 @@
         }
 
         .uraian-textarea {
-            width: 100%; min-height: 42px; max-height: 200px; padding: 8px 10px; border: 1px solid #cbd5e1;
+            width: 100%; min-height: 42px; max-height: 300px; padding: 8px 10px; border: 1px solid #cbd5e1;
             border-radius: 6px; font-size: 0.9rem; color: #2d3748; background: #ffffff; resize: none; overflow: hidden; outline: none; line-height: 1.4;
         }
         .uraian-textarea:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15); }
@@ -243,6 +243,18 @@
         .color-Navy { background-color: #2c3e50; }
         .color-Cyan { background-color: #00cec9; }
         .color-Gray { background-color: #636e72; }
+
+        /* KELAS KHUSUS PENGUNCIAN TAMU (MODE TV) */
+        body.tamu-mode .map-pin {
+            pointer-events: none !important;
+            cursor: default !important;
+        }
+        body.tamu-mode input,
+        body.tamu-mode textarea,
+        body.tamu-mode select {
+            pointer-events: none !important;
+            user-select: none !important;
+        }
 
         #colorPickerModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -326,6 +338,18 @@
         @media (min-width: 768px) { .btn-add-row-bottom { width: auto; } }
         .btn-add-row-bottom:hover { background: #219653; transform: translateY(-1px); }
         .btn-add-row-bottom:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+
+        @media (min-width: 1200px) {
+            body { font-size: 1.05rem; }
+            .main-wrapper { max-width: 96vw; padding: 15px; }
+            .header-banner-wrapper { min-height: 140px; margin-bottom: 12px; }
+            .header-title h1 { font-size: 1.7rem; }
+            .header-title p { font-size: 1rem; }
+            .data-table { font-size: 0.98rem; }
+            .data-table th, .data-table td { padding: 14px 18px; }
+            .editable-input { font-size: 0.98rem; padding: 9px 12px; }
+            .live-clock { font-size: 0.9rem; padding: 6px 14px; }
+        }
     </style>
 </head>
 <body>
@@ -334,7 +358,7 @@
         <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="login-bg-img" onerror="this.style.display='none'">
         <div class="login-card">
             <h2>Login MonPeKontra</h2>
-            <p>Fuel Terminal Boyolali</p>
+            <p>Fuel Terminal Boyolali (TV Mode Ready)</p>
             <form onsubmit="handleLogin(event)">
                 <div class="login-form-group">
                     <label>Username</label>
@@ -524,7 +548,7 @@
                     </button>
                 </div>
 
-                <!-- Tombol Navigasi Halaman Baris (Pagination per 5 Baris) -->
+                <!-- Tombol Navigasi Halaman Baris -->
                 <div class="row-pagination-bar">
                     <button id="btnRowPrev" onclick="ubahHalamanBaris(-1)">Previous</button>
                     <span id="infoHalamanBaris">Halaman 1 dari 1</span>
@@ -542,19 +566,14 @@
         };
 
         let currentRowPage = 1;
-        const rowsPerPage = 5;
-        const initialDefaultRows = 15;
+        const rowsPerPage = 10;
+        const initialDefaultRows = 20;
 
-        // ==========================================
-        // FITUR AUTO LOGOUT KETIKA KELUAR BROWSER / TAB
-        // ==========================================
         window.addEventListener('beforeunload', function () {
-            // Hapus sesi login dari sessionStorage saat tab atau browser ditutup sepenuhnya
             sessionStorage.removeItem('ft_boyolali_logged_in');
             sessionStorage.removeItem('ft_boyolali_role');
         });
 
-        // Cek sesi saat halaman dimuat ulang / dibuka kembali via link
         window.addEventListener('DOMContentLoaded', () => {
             const isLogged = sessionStorage.getItem('ft_boyolali_logged_in');
             if (isLogged === 'true') {
@@ -562,18 +581,13 @@
                 applyUserRoleUI(role);
                 document.getElementById('loginOverlay').style.display = 'none';
                 resetInactivityTimer();
-                triggerAutoScrollAfterLogin();
             } else {
-                // Jika belum ada sesi sessionStorage (artinya tab baru / habis ditutup), pastikan form login muncul
                 document.getElementById('loginOverlay').style.display = 'flex';
             }
         });
 
-        // ==========================================
-        // FITUR AUTO LOGOUT SETELAH 10 MENIT TIDAK ADA AKTIVITAS
-        // ==========================================
         let inactivityTimer;
-        const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 Menit dalam milidetik
+        const INACTIVITY_LIMIT = 10 * 60 * 1000;
 
         function resetInactivityTimer() {
             const isLoggedOut = document.getElementById('loginOverlay').style.display === 'flex';
@@ -598,9 +612,6 @@
             initRealtimeSync();
         });
 
-        // ==========================================
-        // FUNGSI POP-UP FOTO DARI FOLDER LOKAL
-        // ==========================================
         function openPhotoPopup(imageFilename, captionText) {
             const modal = document.getElementById('photoPopupModal');
             const imgEl = document.getElementById('popupImageElement');
@@ -625,7 +636,6 @@
 
             if (CREDENTIALS[user] && CREDENTIALS[user].pass === pass) {
                 const role = CREDENTIALS[user].role;
-                // Menggunakan sessionStorage agar otomatis terhapus saat browser/tab ditutup
                 sessionStorage.setItem('ft_boyolali_logged_in', 'true');
                 sessionStorage.setItem('ft_boyolali_role', role);
                 applyUserRoleUI(role);
@@ -633,19 +643,18 @@
                 errEl.style.display = 'none';
                 resetInactivityTimer();
                 
-                // Mulai auto-scroll setelah berhasil login
-                triggerAutoScrollAfterLogin();
+                setTimeout(() => {
+                    openPhotoPopup('popup.png', 'INFORMASI NEW SIKA');
+                }, 500);
 
-                triggerAutoPopupOnLogin(role);
+                if (role === 'tamu' && !sessionStorage.getItem('tv_refreshed_once')) {
+                    sessionStorage.setItem('tv_refreshed_once', 'true');
+                    window.location.reload();
+                    return;
+                }
             } else {
                 errEl.style.display = 'block';
             }
-        }
-
-        function triggerAutoPopupOnLogin(role) {
-            setTimeout(() => {
-                openPhotoPopup('popup.png', 'INFORMASI NEW SIKA');
-            }, 500);
         }
 
         function applyUserRoleUI(role) {
@@ -658,40 +667,77 @@
             const atSelect = document.getElementById('infoAtSelect');
             
             if (role === 'tamu') {
+                document.body.classList.add('tamu-mode');
                 if (uploadWrapper) uploadWrapper.style.display = 'none';
                 if (resetBtn) resetBtn.style.display = 'none';
                 if (downloadBtn) downloadBtn.style.display = 'none';
-                if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail';
+                if (mapHint) mapHint.innerText = '💡 Mode Display TV (Terkunci)';
                 document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Tamu (Viewer)</b>. Data diperbarui secara otomatis dari cloud.';
                 if(gsiSelect) gsiSelect.disabled = true;
                 if(siSelect) siSelect.disabled = true;
                 if(atSelect) atSelect.disabled = true;
-            } else if (role === 'vendor') {
-                if (uploadWrapper) uploadWrapper.style.display = 'none';
-                if (resetBtn) resetBtn.style.display = 'none';
-                if (downloadBtn) downloadBtn.style.display = 'none';
-                if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail';
-                document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Vendor</b>. Anda dapat mengubah Nama Kontraktor, Judul, Pekerja, Area, dan Uraian Pekerjaan.';
-                if(gsiSelect) gsiSelect.disabled = true;
-                if(siSelect) siSelect.disabled = true;
-                if(atSelect) atSelect.disabled = true;
+
+                if (!window.autoScrollInterval) {
+                    let scrollDirection = 1;
+                    window.autoScrollInterval = setInterval(() => {
+                        const maxScroll = document.body.scrollHeight - window.innerHeight;
+                        if (maxScroll <= 0) return;
+                        
+                        let currentScroll = window.scrollY;
+                        let targetScroll = currentScroll + (scrollDirection * 400);
+
+                        if (targetScroll >= maxScroll) {
+                            targetScroll = maxScroll;
+                            scrollDirection = -1;
+                        } else if (targetScroll <= 0) {
+                            targetScroll = 0;
+                            scrollDirection = 1;
+                        }
+
+                        window.scrollTo({
+                            top: targetScroll,
+                            behavior: 'smooth'
+                        });
+                    }, 7000);
+                }
             } else {
-                if (uploadWrapper) uploadWrapper.style.display = 'flex';
-                if (downloadBtn) downloadBtn.style.display = 'flex';
-                if (mapHint) mapHint.innerText = '💡 Klik peta untuk tambah/geser pin';
-                document.getElementById('welcomeDescText').innerHTML = 'Sistem monitoring aktif. Silakan upload Excel atau ubah data langsung.';
-                if(gsiSelect) gsiSelect.disabled = false;
-                if(siSelect) siSelect.disabled = false;
-                if(atSelect) atSelect.disabled = false;
+                document.body.classList.remove('tamu-mode');
+                if (window.autoScrollInterval) {
+                    clearInterval(window.autoScrollInterval);
+                    window.autoScrollInterval = null;
+                }
+                if (role === 'vendor') {
+                    if (uploadWrapper) uploadWrapper.style.display = 'none';
+                    if (resetBtn) resetBtn.style.display = 'none';
+                    if (downloadBtn) downloadBtn.style.display = 'none';
+                    if (mapHint) mapHint.innerText = '💡 Klik pin untuk melihat detail';
+                    document.getElementById('welcomeDescText').innerHTML = 'Anda masuk sebagai <b>Vendor</b>. Anda dapat mengubah Nama Kontraktor, Judul, Pekerja, Area, dan Uraian Pekerjaan.';
+                    if(gsiSelect) gsiSelect.disabled = true;
+                    if(siSelect) siSelect.disabled = true;
+                    if(atSelect) atSelect.disabled = true;
+                } else {
+                    if (uploadWrapper) uploadWrapper.style.display = 'flex';
+                    if (downloadBtn) downloadBtn.style.display = 'flex';
+                    if (mapHint) mapHint.innerText = '💡 Klik peta untuk tambah/geser pin';
+                    document.getElementById('welcomeDescText').innerHTML = 'Sistem monitoring aktif. Silakan upload Excel atau ubah data langsung.';
+                    if(gsiSelect) gsiSelect.disabled = false;
+                    if(siSelect) siSelect.disabled = false;
+                    if(atSelect) atSelect.disabled = false;
+                }
             }
         }
 
         function handleLogout() {
             clearTimeout(inactivityTimer);
+            if (window.autoScrollInterval) {
+                clearInterval(window.autoScrollInterval);
+                window.autoScrollInterval = null;
+            }
             sessionStorage.removeItem('ft_boyolali_logged_in');
             sessionStorage.removeItem('ft_boyolali_role');
+            sessionStorage.removeItem('tv_refreshed_once');
+            document.body.classList.remove('tamu-mode');
             document.getElementById('loginOverlay').style.display = 'flex';
-            stopAutoScroll(); // Hentikan auto-scroll saat logout
         }
 
         let globalContractorData = [];
@@ -809,7 +855,7 @@
         }
 
         function getSikaClass(val) {
-            if (!val) return 'sika-default';
+            if (!val || val === '-' || val === 'BELUM') return 'sika-default';
             const lower = val.toLowerCase();
             if (lower.includes('panas') || lower.includes('hot')) return 'sika-panas';
             if (lower.includes('dingin') || lower.includes('cold')) return 'sika-dingin';
@@ -952,7 +998,7 @@
             focusContractor(contractorIndex);
         }
 
-        function updateFieldEdit(index, fieldName, value) {
+        function updateFieldEdit(index, fieldName, value, selectElement) {
             isUserTypingLocally = false;
             const role = sessionStorage.getItem('ft_boyolali_role');
             if (role === 'tamu') return;
@@ -960,6 +1006,12 @@
             if (role === 'vendor') {
                 const allowedVendorFields = ['kontraktor', 'judul', 'jumlah_pekerja', 'area', 'uraian'];
                 if (!allowedVendorFields.includes(fieldName)) return;
+            }
+
+            if (selectElement) {
+                if (fieldName === 'izin_kerja' || fieldName === 'validasi') {
+                    selectElement.className = 'status-dropdown ' + (value === 'SUDAH' ? 'status-sudah' : 'status-belum');
+                }
             }
 
             if (!liveDatabaseState.edits) liveDatabaseState.edits = {};
@@ -980,10 +1032,14 @@
             processAndRender(globalContractorData);
         }
 
-        function updateSikaPendukungItem(rowIndex, sikaIndex, value) {
+        function updateSikaPendukungItem(rowIndex, sikaIndex, value, selectElement) {
             isUserTypingLocally = false;
             const role = sessionStorage.getItem('ft_boyolali_role');
             if (role === 'tamu' || role === 'vendor') return;
+            
+            if (selectElement) {
+                selectElement.className = 'sika-select-item ' + getSikaClass(value);
+            }
             
             const row = globalContractorData[rowIndex] || {};
             const edits = liveDatabaseState.edits || {};
@@ -1191,6 +1247,10 @@
                 pin.style.top = posCoord.top;
                 pin.style.left = posCoord.left;
                 pin.innerText = posCoord.pinNumber;
+                
+                // Menambahkan atribut data nama kontraktor agar pin di peta terhubung langsung
+                pin.setAttribute('data-contractor', kontraktor);
+                pin.title = `Kontraktor: ${kontraktor} (Pin No. ${posCoord.pinNumber})`;
 
                 pin.addEventListener('mousedown', (e) => {
                     e.stopPropagation();
@@ -1262,8 +1322,6 @@
         }
 
         function processAndRender(rawJson) {
-            const currentScrollPosition = window.scrollY;
-
             const tableBodyDesktop = document.getElementById('tableBodyDesktop');
             const tableBodyMobile = document.getElementById('tableBodyMobile');
             const mapWrapper = document.getElementById('mapWrapper');
@@ -1382,6 +1440,7 @@
                 const defaultColor = barisData['Warna'] || 'Green';
                 const nomorUrutBaris = targetContractorIdx + 1;
 
+                // Menduplikasi pin dengan menyelaraskan warna, angka, dan kolom nama kontraktor yang sesuai
                 liveDatabaseState.customPositions[targetContractorIdx][nextSubIdx] = {
                     top: topPercent,
                     left: leftPercent,
@@ -1437,6 +1496,7 @@
                 
                 const isReadOnlyAll = (currentRole === 'tamu');
                 const isReadOnlyRest = (currentRole === 'tamu' || currentRole === 'vendor');
+                const tamuInputStyle = isReadOnlyAll ? 'background-color: #f8f9fa !important; cursor: not-allowed; pointer-events: none;' : '';
 
                 let uraianLines = String(uraian).split(/\r?\n/).filter(line => line.trim() !== '');
                 if (uraianLines.length === 0) uraianLines = [uraian];
@@ -1459,7 +1519,7 @@
                     let selectClass = `sika-select-item ${getSikaClass(currentSelectedSika)}`;
 
                     sikaDropdownsHtml += `
-                        <select class="${selectClass}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='sika-select-item '+getSikaClass(this.value); updateSikaPendukungItem(${index}, ${i}, this.value);">
+                        <select class="${selectClass}" ${isReadOnlyRest ? 'disabled style="background-color: #f8f9fa !important; cursor: not-allowed; pointer-events: none;"' : ''} onchange="updateSikaPendukungItem(${index}, ${i}, this.value, this)">
                             ${optionsHtml}
                         </select>
                     `;
@@ -1479,24 +1539,24 @@
                     <td>
                         <div class="contractor-name-wrapper" onclick="event.stopPropagation();">
                             <span class="dot-indicator color-${tableDotColor}" title="${dotTitle}" onclick="handleDotIndicatorClick(${index})"></span>
-                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)" placeholder="Nama Kontraktor">
-                            <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
+                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly' : ''} style="${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)" placeholder="Nama Kontraktor">
+                            <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly' : ''} style="${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
                         </div>
                         <div style="padding-left: 38px; margin-bottom: 4px;" onclick="event.stopPropagation();">
-                            <input type="text" class="editable-input" value="${judul}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'judul', this.value)" placeholder="Judul Pekerjaan" style="font-weight: 600; color: #2b6cb0;">
+                            <input type="text" class="editable-input" value="${judul}" ${isReadOnlyAll ? 'readonly' : ''} style="font-weight: 600; color: #2b6cb0; ${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'judul', this.value)" placeholder="Judul Pekerjaan">
                         </div>
                         <div style="padding-left: 38px;" onclick="event.stopPropagation();">
-                            <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" placeholder="Area Kerja" style="font-size: 0.78rem; color: #718096;">
+                            <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly' : ''} style="font-size: 0.78rem; color: #718096; ${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" placeholder="Area Kerja">
                         </div>
                     </td>
                     <td>
                         <div onclick="event.stopPropagation();">
-                            <textarea class="uraian-textarea" data-row-index="${index}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" oninput="autoResizeTextarea(this)" onchange="updateFieldEdit(${index}, 'uraian', this.value);">${uraian}</textarea>
+                            <textarea class="uraian-textarea" data-row-index="${index}" ${isReadOnlyAll ? 'readonly' : ''} style="${tamuInputStyle}" onfocus="markTypingStart()" oninput="autoResizeTextarea(this)" onchange="updateFieldEdit(${index}, 'uraian', this.value);">${uraian}</textarea>
                         </div>
                     </td>
                     <td>
                         <div onclick="event.stopPropagation();" style="text-align: center;">
-                            <select class="status-dropdown ${izin === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='status-dropdown '+(this.value==='SUDAH'?'status-sudah':'status-belum'); updateFieldEdit(${index}, 'izin_kerja', this.value);">
+                            <select class="status-dropdown ${izin === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled style="background-color: #f8f9fa !important; cursor: not-allowed; pointer-events: none;"' : ''} onchange="updateFieldEdit(${index}, 'izin_kerja', this.value, this)">
                                 <option value="SUDAH" ${izin === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
                                 <option value="BELUM" ${izin === 'BELUM' ? 'selected' : ''}>BELUM</option>
                             </select>
@@ -1509,7 +1569,7 @@
                     </td>
                     <td>
                         <div onclick="event.stopPropagation();" style="text-align: center;">
-                            <select class="status-dropdown ${validasi === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='status-dropdown '+(this.value==='SUDAH'?'status-sudah':'status-belum'); updateFieldEdit(${index}, 'validasi', this.value);">
+                            <select class="status-dropdown ${validasi === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled style="background-color: #f8f9fa !important; cursor: not-allowed; pointer-events: none;"' : ''} onchange="updateFieldEdit(${index}, 'validasi', this.value, this)">
                                 <option value="SUDAH" ${validasi === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
                                 <option value="BELUM" ${validasi === 'BELUM' ? 'selected' : ''}>BELUM</option>
                             </select>
@@ -1532,121 +1592,61 @@
                         <span class="mobile-card-label">Nama Kontraktor & Jumlah Pekerja</span>
                         <div class="contractor-name-wrapper">
                             <span class="dot-indicator color-${tableDotColor}" title="${dotTitle}" onclick="handleDotIndicatorClick(${index})"></span>
-                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)" placeholder="Nama Kontraktor">
-                            <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
+                            <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly' : ''} style="${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)" placeholder="Nama Kontraktor">
+                            <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly' : ''} style="${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
                         </div>
                     </div>
 
                     <div class="mobile-card-row" onclick="event.stopPropagation();">
                         <span class="mobile-card-label">Judul Pekerjaan</span>
-                        <input type="text" class="editable-input" value="${judul}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'judul', this.value)" placeholder="Judul Pekerjaan" style="font-weight: 600; color: #2b6cb0;">
+                        <input type="text" class="editable-input" value="${judul}" ${isReadOnlyAll ? 'readonly' : ''} style="font-weight: 600; color: #2b6cb0; ${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'judul', this.value)" placeholder="Judul Pekerjaan">
                     </div>
 
                     <div class="mobile-card-row" onclick="event.stopPropagation();">
                         <span class="mobile-card-label">Area Kerja</span>
-                        <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" placeholder="Area Kerja" style="font-size: 0.85rem; color: #718096;">
+                        <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly' : ''} style="font-size: 0.85rem; color: #718096; ${tamuInputStyle}" onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" placeholder="Area Kerja">
                     </div>
 
                     <div class="mobile-card-row" onclick="event.stopPropagation();">
                         <span class="mobile-card-label">Uraian Pekerjaan</span>
-                        <textarea class="uraian-textarea" data-row-index="${index}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" oninput="autoResizeTextarea(this)" onchange="updateFieldEdit(${index}, 'uraian', this.value);">${uraian}</textarea>
+                        <textarea class="uraian-textarea" data-row-index="${index}" ${isReadOnlyAll ? 'readonly' : ''} style="${tamuInputStyle}" onfocus="markTypingStart()" oninput="autoResizeTextarea(this)" onchange="updateFieldEdit(${index}, 'uraian', this.value);">${uraian}</textarea>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" class="mobile-card-row">
                         <div onclick="event.stopPropagation();">
                             <span class="mobile-card-label">Izin SIKA Utama</span>
-                            <select class="status-dropdown ${izin === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='status-dropdown '+(this.value==='SUDAH'?'status-sudah':'status-belum'); updateFieldEdit(${index}, 'izin_kerja', this.value);">
+                            <select class="status-dropdown ${izin === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled style="background-color: #f8f9fa !important; cursor: not-allowed; pointer-events: none;"' : ''} onchange="updateFieldEdit(${index}, 'izin_kerja', this.value, this)">
                                 <option value="SUDAH" ${izin === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
                                 <option value="BELUM" ${izin === 'BELUM' ? 'selected' : ''}>BELUM</option>
                             </select>
                         </div>
                         <div onclick="event.stopPropagation();">
                             <span class="mobile-card-label">Validasi H-1</span>
-                            <select class="status-dropdown ${validasi === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled' : ''} onchange="this.className='status-dropdown '+(this.value==='SUDAH'?'status-sudah':'status-belum'); updateFieldEdit(${index}, 'validasi', this.value);">
+                            <select class="status-dropdown ${validasi === 'SUDAH' ? 'status-sudah' : 'status-belum'}" ${isReadOnlyRest ? 'disabled style="background-color: #f8f9fa !important; cursor: not-allowed; pointer-events: none;"' : ''} onchange="updateFieldEdit(${index}, 'validasi', this.value, this)">
                                 <option value="SUDAH" ${validasi === 'SUDAH' ? 'selected' : ''}>SUDAH</option>
                                 <option value="BELUM" ${validasi === 'BELUM' ? 'selected' : ''}>BELUM</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="mobile-card-row" onclick="event.stopPropagation();">
+                    <div class="mobile-card-row" onclick="event.stopPropagation();" style="margin-top: 12px;">
                         <span class="mobile-card-label">Izin SIKA Pendukung</span>
                         ${sikaDropdownsHtml}
                     </div>
                 `;
                 tableBodyMobile.appendChild(cardDiv);
-
-                tr.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
-                cardDiv.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
             });
 
-            document.getElementById('btnRowPrev').disabled = currentRowPage === 1;
-            document.getElementById('btnRowNext').disabled = currentRowPage >= totalPages;
-            document.getElementById('infoHalamanBaris').innerText = `Halaman ${currentRowPage} dari ${totalPages} (Total ${totalRows} Data)`;
+            document.querySelectorAll('.uraian-textarea').forEach(textarea => {
+                autoResizeTextarea(textarea);
+            });
 
             recalculateTotalPekerja();
-            window.scrollTo(window.scrollX, currentScrollPosition);
+
+            document.getElementById('btnRowPrev').disabled = (currentRowPage === 1);
+            document.getElementById('btnRowNext').disabled = (currentRowPage >= totalPages);
+            document.getElementById('infoHalamanBaris').innerText = `Halaman ${currentRowPage} dari ${totalPages}`;
         }
-    </script>
-
-    <!-- FITUR AUTO-SCROLL (TERINTEGRASI & DIPERBAIKI) -->
-    <script>
-        let idleTimeout = 30000; // 30 detik tidak ada aktivitas
-        let scrollStep = 1;      // Kecepatan scroll (piksel)
-        let scrollSpeed = 25;    // Interval waktu (milidetik)
-        let idleTimer = null;
-        let scrollInterval = null;
-        let scrollingDown = true;
-
-        function startAutoScroll() {
-            // Pastikan overlay login SUDAH tertutup (artinya sudah berhasil login)
-            const loginOverlay = document.getElementById('loginOverlay');
-            const isLoggedOut = loginOverlay && loginOverlay.style.display !== 'none';
-            if (isLoggedOut) return; // Jangan jalan jika masih di menu login
-
-            if (scrollInterval) return; // Cegah interval ganda
-
-            scrollInterval = setInterval(() => {
-                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                
-                if (scrollingDown) {
-                    window.scrollBy(0, scrollStep);
-                    // Jika sudah sampai bawah (toleransi 5px)
-                    if (window.scrollY >= maxScroll - 5) {
-                        scrollingDown = false; // Putar arah ke atas
-                    }
-                } else {
-                    window.scrollBy(0, -scrollStep);
-                    // Jika sudah sampai atas
-                    if (window.scrollY <= 0) {
-                        scrollingDown = true; // Putar arah ke bawah
-                    }
-                }
-            }, scrollSpeed);
-        }
-
-        function stopAutoScroll() {
-            // Hentikan gerakan scroll saat user aktif
-            if (scrollInterval) {
-                clearInterval(scrollInterval);
-                scrollInterval = null;
-            }
-            if (idleTimer) {
-                clearTimeout(idleTimer);
-            }
-            // Set ulang timer jeda aktivitas (30 detik dari aktivitas terakhir)
-            idleTimer = setTimeout(startAutoScroll, idleTimeout);
-        }
-
-        function triggerAutoScrollAfterLogin() {
-            stopAutoScroll();
-        }
-
-        // Daftarkan event listener untuk mendeteksi aktivitas user
-        const userEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'click', 'scroll'];
-        userEvents.forEach(eventName => {
-            window.addEventListener(eventName, stopAutoScroll, { passive: true });
-        });
     </script>
 </body>
 </html>
