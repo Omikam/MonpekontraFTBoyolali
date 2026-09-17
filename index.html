@@ -68,7 +68,6 @@
         }
         .login-btn:hover { background: #219653; }
         .login-error { color: #e74c3c; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: 600; }
-        .login-info-hint { margin-top: 15px; font-size: 0.78rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 10px; text-align: left; }
 
         .main-wrapper { max-width: 1500px; margin: 0 auto; padding: 20px; }
         .header-banner-wrapper {
@@ -139,7 +138,7 @@
             position: absolute; width: 32px; height: 32px; border-radius: 50%;
             border: 2px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.5); cursor: grab;
             transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold; color: white; z-index: 10;
+            font-size: 11px; font-weight: bold; color: #000000; z-index: 10;
         }
         .map-pin:active { cursor: grabbing; }
         .map-pin.highlight { box-shadow: 0 0 15px #f39c12; border: 3px solid #fff; animation: pulse-pin 1.2s infinite; z-index: 30; }
@@ -183,6 +182,12 @@
         }
         .editable-input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15); }
         .input-jumlah { width: 75px; text-align: center; font-weight: bold; flex-shrink: 0; }
+
+        /* Badge Nomor Urut Baris */
+        .row-number-badge {
+            background: #eef2f7; color: #000000; font-size: 0.75rem; font-weight: 700;
+            padding: 5px 8px; border-radius: 6px; text-align: center; flex-shrink: 0; min-width: 32px; border: 1px solid #cbd5e1;
+        }
 
         .uraian-textarea {
             width: 100%; min-height: 42px; max-height: 200px; padding: 8px 10px; border: 1px solid #cbd5e1;
@@ -342,12 +347,6 @@
                 <button type="submit" class="login-btn">Masuk</button>
                 <div id="loginError" class="login-error">Username atau password salah!</div>
             </form>
-            <div class="login-info-hint">
-                <b>Info Akun:</b><br>
-                • Admin (Editor & Upload): <code>admin</code> / <code>123</code><br>
-                • Vendor (Edit Kontraktor & Pekerjaan): <code>vendor</code> / <code>2701</code><br>
-                • Tamu (Hanya Lihat): <code>tamu</code> / <code>123</code>
-            </div>
         </div>
     </div>
 
@@ -443,7 +442,7 @@
             <div class="running-text-badge">📢 INFO</div>
             <div class="running-text-marquee">
                 <marquee scrollamount="5" scrolldelay="60">
-                    Selamat Datang di Sistem Monitoring Pekerjaan Kontraktor Fuel Terminal Boyolali — Pastikan seluruh izin SIKA utama dan pendukung telah divalidasi sebelum memulai pekerjaan di area site. Utamakan Keselamatan dan Kesehatan Kerja (K3) dalam setiap aktivitas pekerjaan Anda! #Sauto #SafetyUnTolerance
+                    Selamat Datang di Sistem Monitoring Pekerjaan Kontraktor Fuel Terminal Boyolali — Pastikan seluruh izin SIKA utama dan pendukung telah divalidasi sebelum memulai pekerjaan di area site. Utamakan Keselamatan dan Kesehatan Kerja (K3) dalam setiap aktivitas pekerjaan Anda! Sauto SafetyUnTolerance
                 </marquee>
             </div>
         </div>
@@ -503,6 +502,7 @@
                     <table class="data-table" id="tabelDaftarKontraktor">
                         <thead>
                             <tr>
+                                <th style="width: 70px; text-align: center;">No.</th>
                                 <th style="width: 25%;">Nama Kontraktor, Pekerja & Judul</th>
                                 <th style="width: 27%;">Uraian Pekerjaan</th>
                                 <th style="width: 14%; text-align: center;">Izin SIKA Utama</th>
@@ -576,6 +576,7 @@
                 applyUserRoleUI(role);
                 document.getElementById('loginOverlay').style.display = 'none';
                 resetInactivityTimer();
+                triggerAutoScrollAfterLogin();
             }
         });
 
@@ -616,6 +617,9 @@
                 document.getElementById('loginOverlay').style.display = 'none';
                 errEl.style.display = 'none';
                 resetInactivityTimer();
+                
+                // Mulai auto-scroll setelah berhasil login
+                triggerAutoScrollAfterLogin();
 
                 triggerAutoPopupOnLogin(role);
             } else {
@@ -672,6 +676,7 @@
             localStorage.removeItem('ft_boyolali_logged_in');
             localStorage.removeItem('ft_boyolali_role');
             document.getElementById('loginOverlay').style.display = 'flex';
+            stopAutoScroll(); // Hentikan auto-scroll saat logout
         }
 
         let globalContractorData = [];
@@ -866,6 +871,9 @@
                 liveDatabaseState.customPositions[index][subIdx].color = colorName;
             });
 
+            globalContractorData[index]['Warna'] = colorName;
+            saveStateToCloud('rawJson', globalContractorData);
+
             saveStateToCloud('customPositions', liveDatabaseState.customPositions);
             closeColorPickerModal();
             processAndRender(globalContractorData);
@@ -878,7 +886,7 @@
                 activeEditingMapPin = { contractorIndex: index, pinSubIndex: subIdx };
                 const pinData = liveDatabaseState.customPositions[index][subIdx];
                 
-                document.getElementById('mapPinModalTitle').innerText = `Edit Pin #${pinData.pinNumber} (Kontr. #${index + 1})`;
+                document.getElementById('mapPinModalTitle').innerText = `Edit Pin ${pinData.pinNumber} (Kontr. ${index + 1})`;
                 document.getElementById('mapPinNumberInput').value = pinData.pinNumber;
                 document.getElementById('mapPinEditModal').style.display = 'flex';
             } else {
@@ -900,6 +908,12 @@
             saveStateToCloud('positionHistory', liveDatabaseState.positionHistory);
 
             liveDatabaseState.customPositions[contractorIndex][pinSubIndex].color = colorName;
+            
+            if(pinSubIndex === 0) {
+                globalContractorData[contractorIndex]['Warna'] = colorName;
+                saveStateToCloud('rawJson', globalContractorData);
+            }
+
             saveMapPinChanges();
         }
 
@@ -936,8 +950,19 @@
             if (!liveDatabaseState.edits) liveDatabaseState.edits = {};
             if (!liveDatabaseState.edits[index]) liveDatabaseState.edits[index] = {};
             liveDatabaseState.edits[index][fieldName] = value;
+            
+            if (fieldName === 'jumlah_pekerja') {
+                globalContractorData[index]['Jumlah Pekerja'] = value;
+                saveStateToCloud('rawJson', globalContractorData);
+            } else if (fieldName === 'kontraktor') {
+                globalContractorData[index]['Nama Kontraktor'] = value;
+                saveStateToCloud('rawJson', globalContractorData);
+            }
+
             saveStateToCloud('edits', liveDatabaseState.edits);
-            if(fieldName === 'jumlah_pekerja') recalculateTotalPekerja();
+            recalculateTotalPekerja();
+            
+            processAndRender(globalContractorData);
         }
 
         function updateSikaPendukungItem(rowIndex, sikaIndex, value) {
@@ -1076,9 +1101,18 @@
 
         function recalculateTotalPekerja() {
             let total = 0;
-            document.querySelectorAll('.input-jumlah').forEach(input => {
-                total += parseInt(input.value) || 0;
+            const edits = liveDatabaseState.edits || {};
+            
+            globalContractorData.forEach((row, idx) => {
+                let val = 0;
+                if (edits[idx] && edits[idx].jumlah_pekerja !== undefined) {
+                    val = parseInt(edits[idx].jumlah_pekerja) || 0;
+                } else {
+                    val = parseInt(row['Jumlah Pekerja']) || 0;
+                }
+                total += val;
             });
+
             document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: ${total} Pekerja`;
         }
 
@@ -1093,12 +1127,17 @@
             processAndRender(globalContractorData);
         }
 
-        // Fungsi pembantu untuk merender pin peta berdasarkan indeks data tertentu
         function renderPinsForIndex(index, row, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson) {
             const defaultWarna = row['Warna'] || 'Green';
             let posObj = customPositions[index];
             let positionsList = [];
             
+            const kontraktor = edits[index]?.kontraktor !== undefined ? edits[index].kontraktor : (row['Nama Kontraktor'] || '');
+            
+            if (!kontraktor || kontraktor.trim() === "") {
+                return;
+            }
+
             if (posObj && typeof posObj === 'object' && !posObj.top) {
                 Object.keys(posObj).forEach(subIdx => {
                     if (posObj[subIdx]) {
@@ -1116,8 +1155,8 @@
                     subIdx: 0, 
                     top: posObj.top, 
                     left: posObj.left, 
-                    color: posObj[subIdx].color || defaultWarna,
-                    pinNumber: posObj[subIdx].pinNumber !== undefined ? posObj[subIdx].pinNumber : (index + 1) 
+                    color: posObj.color || defaultWarna,
+                    pinNumber: posObj.pinNumber !== undefined ? posObj.pinNumber : (index + 1) 
                 });
             } else {
                 positionsList.push({
@@ -1237,7 +1276,7 @@
                 document.getElementById('topSectionGrid').style.display = 'grid';
                 document.getElementById('dataTableSection').style.display = 'block';
                 
-                const emptyHtml = `<tr><td colspan="5" style="text-align: center; color: #a0aec0; padding: 25px;">Belum ada data. Silakan gunakan tombol tambah baris di bawah.</td></tr>`;
+                const emptyHtml = `<tr><td colspan="6" style="text-align: center; color: #a0aec0; padding: 25px;">Belum ada data. Silakan gunakan tombol tambah baris di bawah.</td></tr>`;
                 tableBodyDesktop.innerHTML = emptyHtml;
                 tableBodyMobile.innerHTML = `<div style="text-align: center; color: #a0aec0; padding: 25px;">Belum ada data.</div>`;
                 document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: 0`;
@@ -1302,7 +1341,6 @@
             setupDropdown('infoSiSelect', allSi, 'si');
             setupDropdown('infoAtSelect', allAt, 'at');
 
-            // --- KLIK PETA UNTUK TAMBAH PIN BARU DI BARIS KONTRAKTOR AKTIF ---
             mapWrapper.onclick = function(e) {
                 if (currentRole !== 'admin') return;
                 if (e.target !== imgEl && e.target !== mapWrapper) return;
@@ -1325,20 +1363,15 @@
                 const subIndices = Object.keys(liveDatabaseState.customPositions[targetContractorIdx]).map(k => parseInt(k));
                 const nextSubIdx = subIndices.length > 0 ? Math.max(...subIndices) + 1 : 0;
 
-                let maxPinNum = rawJson.length;
-                Object.keys(liveDatabaseState.customPositions).forEach(cIdx => {
-                    Object.keys(liveDatabaseState.customPositions[cIdx]).forEach(sIdx => {
-                        let pNum = liveDatabaseState.customPositions[cIdx][sIdx].pinNumber;
-                        if (pNum && pNum > maxPinNum) maxPinNum = pNum;
-                    });
-                });
+                const barisData = rawJson[targetContractorIdx] || {};
+                const defaultColor = barisData['Warna'] || 'Green';
+                const nomorUrutBaris = targetContractorIdx + 1;
 
-                const defaultColor = rawJson[targetContractorIdx]['Warna'] || 'Green';
                 liveDatabaseState.customPositions[targetContractorIdx][nextSubIdx] = {
                     top: topPercent,
                     left: leftPercent,
                     color: defaultColor,
-                    pinNumber: maxPinNum + 1
+                    pinNumber: nomorUrutBaris
                 };
 
                 saveStateToCloud('customPositions', liveDatabaseState.customPositions);
@@ -1354,24 +1387,13 @@
             const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
             const paginatedData = rawJson.slice(startIndex, endIndex);
 
-            // ==========================================
-            // LOGIKA RENDER PIN PETA BERDASARKAN HALAMAN
-            // ==========================================
-            if (currentRowPage === 1) {
-                // Halaman 1: Tampilkan pin secara keseluruhan dari SEMUA data kontraktor
-                rawJson.forEach((rowItem, allIdx) => {
-                    renderPinsForIndex(allIdx, rowItem, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson);
-                });
-            } else {
-                // Halaman 2, 3, dan seterusnya: Hanya tampilkan pin data kontraktor di halaman itu saja
-                paginatedData.forEach((rowItem, paginatedIdx) => {
-                    const actualIdx = startIndex + paginatedIdx;
-                    renderPinsForIndex(actualIdx, rowItem, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson);
-                });
-            }
+            rawJson.forEach((rowItem, allIdx) => {
+                renderPinsForIndex(allIdx, rowItem, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson);
+            });
 
             paginatedData.forEach((row, paginatedIdx) => {
                 const index = startIndex + paginatedIdx;
+                const rowNumberDisplay = index + 1;
                 const e = edits[index] || {};
                 const defaultWarna = row['Warna'] || 'Green';
                 
@@ -1385,7 +1407,14 @@
                 const kontraktor = e.kontraktor !== undefined ? e.kontraktor : (row['Nama Kontraktor'] || '');
                 const judul = e.judul !== undefined ? e.judul : (row['Judul Pekerjaan'] || '');
                 const area = e.area !== undefined ? e.area : (row['Area Kerja'] || '');
-                const jumlah = e.jumlah_pekerja !== undefined ? e.jumlah_pekerja : (parseInt(row['Jumlah Pekerja']) || 0);
+                
+                let jumlah = 0;
+                if (e.jumlah_pekerja !== undefined) {
+                    jumlah = parseInt(e.jumlah_pekerja) || 0;
+                } else {
+                    jumlah = parseInt(row['Jumlah Pekerja']) || 0;
+                }
+
                 const uraian = e.uraian !== undefined ? e.uraian : (row['Uraian Pekerjaan'] || '-');
                 const izin = (e.izin_kerja !== undefined ? e.izin_kerja : (row['Izin Kerja Utama'] || 'BELUM')).toUpperCase();
                 const izinPendukungVal = e.izin_pendukung !== undefined ? e.izin_pendukung : (row['Izin Kerja Pendukung'] || '-');
@@ -1421,7 +1450,6 @@
                     `;
                 }
 
-                // --- RENDER DESKTOP ROW ---
                 const tr = document.createElement('tr');
                 tr.className = 'contractor-row';
                 tr.id = `row-${index}`;
@@ -1430,16 +1458,19 @@
                 const dotTitle = currentRole === 'admin' ? 'Klik untuk memilih warna indikator kontraktor ini' : 'Klik untuk fokus pada pin kontraktor';
 
                 tr.innerHTML = `
+                    <td style="text-align: center; vertical-align: middle;">
+                        <span class="row-number-badge" title="No. Urut Baris">${rowNumberDisplay}</span>
+                    </td>
                     <td>
                         <div class="contractor-name-wrapper" onclick="event.stopPropagation();">
                             <span class="dot-indicator color-${tableDotColor}" title="${dotTitle}" onclick="handleDotIndicatorClick(${index})"></span>
                             <input type="text" class="editable-input" value="${kontraktor}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'kontraktor', this.value)" placeholder="Nama Kontraktor">
                             <input type="number" class="editable-input input-jumlah" value="${jumlah}" min="0" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'jumlah_pekerja', parseInt(this.value)||0)">
                         </div>
-                        <div style="padding-left: 24px; margin-bottom: 4px;" onclick="event.stopPropagation();">
+                        <div style="padding-left: 38px; margin-bottom: 4px;" onclick="event.stopPropagation();">
                             <input type="text" class="editable-input" value="${judul}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'judul', this.value)" placeholder="Judul Pekerjaan" style="font-weight: 600; color: #2b6cb0;">
                         </div>
-                        <div style="padding-left: 24px;" onclick="event.stopPropagation();">
+                        <div style="padding-left: 38px;" onclick="event.stopPropagation();">
                             <input type="text" class="editable-input" value="${area}" ${isReadOnlyAll ? 'readonly style="background:#f8f9fa; border:none;"' : ''} onfocus="markTypingStart()" onchange="updateFieldEdit(${index}, 'area', this.value)" placeholder="Area Kerja" style="font-size: 0.78rem; color: #718096;">
                         </div>
                     </td>
@@ -1472,14 +1503,15 @@
                 `;
                 tableBodyDesktop.appendChild(tr);
 
-                // --- RENDER MOBILE CARD ---
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'mobile-contractor-card contractor-row';
                 cardDiv.id = `card-${index}`;
                 cardDiv.onclick = () => focusContractor(index);
 
                 cardDiv.innerHTML = `
-                    <div style="font-size: 0.75rem; font-weight: bold; color: #4a5568; margin-bottom: 8px;">BARIS #${index + 1}</div>
+                    <div style="font-size: 0.75rem; font-weight: bold; color: #4a5568; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span class="row-number-badge">${rowNumberDisplay}</span> BARIS KONTRAKTOR
+                    </div>
                     
                     <div class="mobile-card-row" onclick="event.stopPropagation();">
                         <span class="mobile-card-label">Nama Kontraktor & Jumlah Pekerja</span>
@@ -1540,6 +1572,66 @@
             recalculateTotalPekerja();
             window.scrollTo(window.scrollX, currentScrollPosition);
         }
+    </script>
+
+    <!-- FITUR AUTO-SCROLL (TERINTEGRASI & DIPERBAIKI) -->
+    <script>
+        let idleTimeout = 30000; // 30 detik tidak ada aktivitas
+        let scrollStep = 1;      // Kecepatan scroll (piksel)
+        let scrollSpeed = 25;    // Interval waktu (milidetik)
+        let idleTimer = null;
+        let scrollInterval = null;
+        let scrollingDown = true;
+
+        function startAutoScroll() {
+            // Pastikan overlay login SUDAH tertutup (artinya sudah berhasil login)
+            const loginOverlay = document.getElementById('loginOverlay');
+            const isLoggedOut = loginOverlay && loginOverlay.style.display !== 'none';
+            if (isLoggedOut) return; // Jangan jalan jika masih di menu login
+
+            if (scrollInterval) return; // Cegah interval ganda
+
+            scrollInterval = setInterval(() => {
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                
+                if (scrollingDown) {
+                    window.scrollBy(0, scrollStep);
+                    // Jika sudah sampai bawah (toleransi 5px)
+                    if (window.scrollY >= maxScroll - 5) {
+                        scrollingDown = false; // Putar arah ke atas
+                    }
+                } else {
+                    window.scrollBy(0, -scrollStep);
+                    // Jika sudah sampai atas
+                    if (window.scrollY <= 0) {
+                        scrollingDown = true; // Putar arah ke bawah
+                    }
+                }
+            }, scrollSpeed);
+        }
+
+        function stopAutoScroll() {
+            // Hentikan gerakan scroll saat user aktif
+            if (scrollInterval) {
+                clearInterval(scrollInterval);
+                scrollInterval = null;
+            }
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+            }
+            // Set ulang timer jeda aktivitas (30 detik dari aktivitas terakhir)
+            idleTimer = setTimeout(startAutoScroll, idleTimeout);
+        }
+
+        function triggerAutoScrollAfterLogin() {
+            stopAutoScroll();
+        }
+
+        // Daftarkan event listener untuk mendeteksi aktivitas user
+        const userEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'click', 'scroll'];
+        userEvents.forEach(eventName => {
+            window.addEventListener(eventName, stopAutoScroll, { passive: true });
+        });
     </script>
 </body>
 </html>
