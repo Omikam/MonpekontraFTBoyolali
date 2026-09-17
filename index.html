@@ -4,17 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monitoring Pekerjaan Kontraktor di Fuel Terminal Boyolali</title>
-    
-    <!-- Pustaka SheetJS untuk Export/Import Excel -->
+    <!-- Pustaka SheetJS untuk Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- Pustaka Firebase SDK v10 (Modular Realtime Database) -->
+    <!-- Pustaka Firebase SDK v10 (Modular) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // ==========================================
-        // KONFIGURASI FIREBASE KONEKSI CLOUD
+        // KONFIGURASI FIREBASE ANDA
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCX7KZrTRNTmGKdZcRVKM6RSe8P_e5BwJ8",
@@ -27,29 +25,22 @@
             measurementId: "G-VEZHSVQVQD"
         };
 
-        // Inisialisasi aplikasi dan database Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Menyimpan objek Firebase ke window agar dapat diakses skrip global
         window.FB_DB = db;
         window.FB_ref = ref;
         window.FB_set = set;
         window.FB_onValue = onValue;
         window.FB_get = get;
 
-        // Memicu event bahwa Firebase siap digunakan
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
-    <!-- ========================================== -->
-    <!-- PENGATURAN GAYA TAMPILAN (CSS STYLING) -->
-    <!-- ========================================== -->
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f8; color: #333; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        /* Tampilan Overlay Halaman Login */
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #0b2545; display: flex; justify-content: center; align-items: center;
@@ -79,7 +70,6 @@
         .login-error { color: #e74c3c; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: 600; }
         .login-info-hint { margin-top: 15px; font-size: 0.78rem; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 10px; text-align: left; }
 
-        /* Tata Letak Utama Konten Web */
         .main-wrapper { max-width: 1500px; margin: 0 auto; padding: 20px; }
         .header-banner-wrapper {
             position: relative; width: 100%; min-height: 160px;
@@ -97,8 +87,6 @@
         .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
         .live-clock { background: rgba(0, 0, 0, 0.55); padding: 5px 12px; border-radius: 6px; font-size: 0.78rem; border: 1px solid rgba(255,255,255,0.25); white-space: nowrap; backdrop-filter: blur(4px); }
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        
-        /* Tombol Aksi */
         .upload-btn, .action-btn {
             background: #27ae60; color: white; padding: 7px 14px; border-radius: 6px;
             cursor: pointer; font-size: 0.85rem; font-weight: 600; border: none;
@@ -114,7 +102,6 @@
         .action-btn.logout-btn:hover { background: #707b7c; }
         .upload-btn input { display: none; }
 
-        /* Running Text (Papan Pengumuman Berjalan) */
         .running-text-container {
             background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
             padding: 10px 15px; margin-bottom: 25px; display: flex; align-items: center;
@@ -145,7 +132,6 @@
         .card-header { padding: 15px 20px; background: #fafbfc; border-bottom: 1px solid #eee; font-weight: 600; font-size: 1rem; color: #2c3e50; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .card-body { padding: 20px; }
 
-        /* Komponen Peta Lokasi & Pin */
         .map-container { position: relative; width: 100%; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; user-select: none; }
         .map-container img { width: 100%; display: block; height: auto; pointer-events: none; }
         
@@ -169,13 +155,13 @@
         }
         .coordinate-helper span { font-weight: bold; color: #d97706; }
 
-        /* Tabel Tampilan Desktop */
+        /* DESKTOP TABLE STYLE */
         .desktop-table-container { display: block; overflow-x: auto; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         .data-table th { background: #f8f9fa; color: #4a5568; font-weight: 600; text-align: left; padding: 12px 15px; border-bottom: 2px solid #edf2f7; }
         .data-table td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; vertical-align: middle; color: #2d3748; }
 
-        /* Tampilan Kartu Responsif Mobile */
+        /* MOBILE CARD LIST STYLE (Responsive) */
         .mobile-card-container { display: none; padding: 10px; background: #f8f9fa; }
         .mobile-contractor-card {
             background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px;
@@ -191,7 +177,6 @@
             .card-body { padding: 10px; }
         }
 
-        /* Input dan Elemen Formulir */
         .editable-input {
             width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
             font-size: 0.9rem; color: #2d3748; background: #ffffff; outline: none; transition: border-color 0.2s;
@@ -212,7 +197,6 @@
         .sika-select-item { width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: bold; border: 1px solid #cbd5e1; cursor: pointer; outline: none; margin-bottom: 6px; }
         .sika-select-item:last-child { margin-bottom: 0; }
         
-        /* Warna Label SIKA Berdasarkan Jenis Pekerjaan */
         .sika-panas { background-color: #fef3c7 !important; color: #b45309 !important; border-color: #fde68a !important; }
         .sika-dingin { background-color: #e0f2fe !important; color: #0369a1 !important; border-color: #bae6fd !important; }
         .sika-ketinggian { background-color: #dcfce7 !important; color: #15803d !important; border-color: #bbf7d0 !important; }
@@ -242,7 +226,6 @@
         }
         .dot-indicator:hover { transform: scale(1.25); }
         
-        /* Palet Warna Indikator */
         .color-Green { background-color: #2ecc71; }
         .color-Blue { background-color: #3498db; }
         .color-Red { background-color: #e74c3c; }
@@ -256,7 +239,6 @@
         .color-Cyan { background-color: #00cec9; }
         .color-Gray { background-color: #636e72; }
 
-        /* Desain Jendela Modal (Pop-up) */
         #colorPickerModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center;
@@ -286,7 +268,7 @@
             z-index: 10000; backdrop-filter: blur(3px); padding: 15px;
         }
 
-        /* Modal Pop-up Foto */
+        /* MODAL POP-UP FOTO */
         #photoPopupModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center;
@@ -313,7 +295,6 @@
         .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .info-box label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 8px; }
 
-        /* Pesan Selamat Datang / Status Kosong */
         .welcome-container-full {
             grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: white;
             border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #eaeaea; margin: 10px 0;
@@ -324,13 +305,11 @@
         .welcome-container-full p { font-size: 1rem; color: #64748b; max-width: 650px; line-height: 1.6; margin-bottom: 25px; }
         .welcome-badge { background: #eef2f7; color: #1e293b; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; border: 1px solid #cbd5e1; }
 
-        /* Navigasi Halaman Baris (Pagination) */
         .row-pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: #fafbfc; border-top: 1px solid #eee; flex-wrap: wrap; gap: 10px; }
         .row-pagination-bar button { padding: 8px 16px; cursor: pointer; background: #0b2545; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
         .row-pagination-bar button:disabled { background: #cbd5e1; cursor: not-allowed; }
         .row-pagination-bar span { font-size: 0.85rem; font-weight: 600; color: #475569; }
 
-        /* Kontainer Tombol Tambah Baris di Bagian Bawah */
         .table-bottom-add-container {
             padding: 15px; background: #fdfdfd; border-top: 1px solid #edf2f7; text-align: center; display: none; justify-content: center; align-items: center;
         }
@@ -346,9 +325,6 @@
 </head>
 <body>
 
-    <!-- ========================================== -->
-    <!-- TAMPILAN ANTARMUKA HALAMAN LOGIN -->
-    <!-- ========================================== -->
     <div id="loginOverlay">
         <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="login-bg-img" onerror="this.style.display='none'">
         <div class="login-card">
@@ -375,9 +351,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL PILIHAN WARNA KONTRAKTOR -->
-    <!-- ========================================== -->
+    <!-- Modal Pilihan Warna Kontraktor -->
     <div id="colorPickerModal">
         <div class="color-picker-card">
             <h3>Pilih Warna Kontraktor</h3>
@@ -400,9 +374,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL EDIT PIN PETA -->
-    <!-- ========================================== -->
+    <!-- Modal Edit Pin Peta -->
     <div id="mapPinEditModal">
         <div class="color-picker-card" style="max-width: 380px;">
             <h3 id="mapPinModalTitle">Kelola Pin Peta</h3>
@@ -435,9 +407,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
     <!-- MODAL POP-UP FOTO DARI FOLDER -->
-    <!-- ========================================== -->
     <div id="photoPopupModal" onclick="closePhotoPopup()">
         <div class="photo-popup-content" onclick="event.stopPropagation()">
             <button class="photo-popup-close" onclick="closePhotoPopup()">×</button>
@@ -446,11 +416,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- STRUKTUR UTAMA KONTEN DASHBOARD WEB -->
-    <!-- ========================================== -->
     <div class="main-wrapper">
-        <!-- Bagian Banner Header -->
         <div class="header-banner-wrapper">
             <img src="banner_pertamina.jpg" alt="Banner Pertamina" class="header-banner-bg" onerror="this.style.display='none'">
             <div class="banner-content-overlay">
@@ -473,7 +439,6 @@
             </div>
         </div>
 
-        <!-- Bagian Pengumuman Berjalan (Running Text) -->
         <div class="running-text-container">
             <div class="running-text-badge">📢 INFO</div>
             <div class="running-text-marquee">
@@ -483,7 +448,6 @@
             </div>
         </div>
 
-        <!-- Bagian Tampilan Status Kosong / Loading Awal -->
         <div class="welcome-container-full" id="welcomeMessageCard">
             <div class="welcome-icon">📊</div>
             <h2 id="welcomeTitleText">Memuat Data dari Cloud...</h2>
@@ -491,7 +455,6 @@
             <div class="welcome-badge" id="welcomeStatusBadge">Status: Menghubungkan</div>
         </div>
 
-        <!-- Bagian Grid Atas: Peta Site & Informasi GSI, SI, AT -->
         <div class="top-section-grid" id="topSectionGrid" style="display: none;">
             <div class="card" style="margin-bottom: 0;">
                 <div class="card-header">
@@ -529,14 +492,13 @@
             </div>
         </div>
 
-        <!-- Bagian Tabel Data Utama Kontraktor -->
         <div id="dataTableSection" style="display: none;">
             <div class="card">
                 <div class="card-header">
                     <span>Daftar & Uraian Pekerjaan Kontraktor</span>
                 </div>
 
-                <!-- Tampilan Tabel Versi Desktop -->
+                <!-- TAMPILAN DESKTOP (TABEL) -->
                 <div class="desktop-table-container">
                     <table class="data-table" id="tabelDaftarKontraktor">
                         <thead>
@@ -552,17 +514,17 @@
                     </table>
                 </div>
 
-                <!-- Tampilan Kartu Versi Mobile / Responsif -->
+                <!-- TAMPILAN MOBILE (KARTU RESPONSIF) -->
                 <div class="mobile-card-container" id="tableBodyMobile"></div>
                 
-                <!-- Tombol Tambah Baris Kontraktor di Bagian Bawah -->
+                <!-- Tombol Tambah Baris di Bawah Tabel -->
                 <div class="table-bottom-add-container" id="bottomAddRowContainer">
                     <button type="button" id="bottomAddBtn" onclick="tambahBarisManual()" class="btn-add-row-bottom">
                         ➕ Tambah Kontraktor / Baris Baru
                     </button>
                 </div>
 
-                <!-- Navigasi Halaman Baris (Pagination) -->
+                <!-- Tombol Navigasi Halaman Baris (Pagination per 5 Baris) -->
                 <div class="row-pagination-bar">
                     <button id="btnRowPrev" onclick="ubahHalamanBaris(-1)">Previous</button>
                     <span id="infoHalamanBaris">Halaman 1 dari 1</span>
@@ -572,11 +534,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- SKRIP UTAMA PEMROGRAMAN JAVASCRIPT -->
-    <!-- ========================================== -->
     <script>
-        // Daftar Kredensial Akun Pengguna & Hak Akses
         const CREDENTIALS = {
             "admin": { pass: "123", role: "admin" },
             "vendor": { pass: "2701", role: "vendor" },
@@ -593,7 +551,6 @@
         let inactivityTimer;
         const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 Menit dalam milidetik
 
-        // Fungsi untuk mereset timer hitung mundur inaktivitas pengguna
         function resetInactivityTimer() {
             const isLoggedOut = document.getElementById('loginOverlay').style.display === 'flex';
             if (isLoggedOut) return;
@@ -605,7 +562,6 @@
             }, INACTIVITY_LIMIT);
         }
 
-        // Memantau aktivitas interaksi mouse, keyboard, touch, atau scroll layar
         window.onload = function() {
             const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll', 'click'];
             events.forEach(eventName => {
@@ -614,7 +570,6 @@
             resetInactivityTimer();
         };
 
-        // Mengecek status login dari localStorage saat halaman dimuat
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('ft_boyolali_logged_in') === 'true') {
                 const role = localStorage.getItem('ft_boyolali_role') || 'admin';
@@ -624,7 +579,6 @@
             }
         });
 
-        // Menghubungkan sinkronisasi real-time setelah Firebase siap
         window.addEventListener('firebase-ready', () => {
             initRealtimeSync();
         });
@@ -648,7 +602,6 @@
             document.getElementById('popupImageElement').src = '';
         }
 
-        // Fungsi penanganan proses login pengguna
         function handleLogin(e) {
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim().toLowerCase();
@@ -664,25 +617,18 @@
                 errEl.style.display = 'none';
                 resetInactivityTimer();
 
-                // Memunculkan pop-up otomatis setelah berhasil login
                 triggerAutoPopupOnLogin(role);
             } else {
                 errEl.style.display = 'block';
             }
         }
 
-        // Fungsi pemicu pop-up otomatis saat berhasil login
         function triggerAutoPopupOnLogin(role) {
-            if (role === 'admin') {
-                setTimeout(() => { openPhotoPopup('popup.png', 'INFORMASI NEW SIKA'); }, 500);
-            } else if (role === 'vendor') {
-                setTimeout(() => { openPhotoPopup('popup.png', 'INFORMASI NEW SIKA'); }, 500);
-            } else {
-                setTimeout(() => { openPhotoPopup('popup.png', 'INFORMASI NEW SIKA'); }, 500);
-            }
+            setTimeout(() => {
+                openPhotoPopup('popup.png', 'INFORMASI NEW SIKA');
+            }, 500);
         }
 
-        // Menyesuaikan hak akses tampilan antarmuka berdasarkan peran (Role) user
         function applyUserRoleUI(role) {
             const uploadWrapper = document.getElementById('uploadExcelWrapper');
             const resetBtn = document.getElementById('resetPosBtn');
@@ -721,7 +667,6 @@
             }
         }
 
-        // Fungsi proses logout akun
         function handleLogout() {
             clearTimeout(inactivityTimer);
             localStorage.removeItem('ft_boyolali_logged_in');
@@ -736,7 +681,6 @@
         let activeContractorIndexForColorModal = null;
         let activeEditingMapPin = null;
 
-        // Inisialisasi sinkronisasi data real-time dengan Firebase
         function initRealtimeSync() {
             const dbRef = window.FB_ref(window.FB_DB, 'monitoring_data');
             window.FB_onValue(dbRef, (snapshot) => {
@@ -772,7 +716,6 @@
             });
         }
 
-        // Menyimpan perubahan state data ke Cloud Firebase
         function saveStateToCloud(updatedKey, updatedValue) {
             const currentRole = localStorage.getItem('ft_boyolali_role');
             if (currentRole === 'tamu') return;
@@ -780,7 +723,6 @@
             window.FB_set(window.FB_ref(window.FB_DB, 'monitoring_data'), liveDatabaseState);
         }
 
-        // Menampilkan jam digital real-time di header
         function updateClock() {
             const now = new Date();
             document.getElementById('liveClock').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB';
@@ -788,7 +730,6 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Mengunggah dan memproses file Excel ke sistem
         function handleExcelUpload(event) {
             if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
             const file = event.target.files[0];
@@ -816,7 +757,6 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Menambah baris data kontraktor baru secara manual
         function tambahBarisManual() {
             const currentRole = localStorage.getItem('ft_boyolali_role');
             if (currentRole === 'tamu') return;
@@ -841,7 +781,6 @@
             processAndRender(globalContractorData);
         }
 
-        // Mengatur kelas tema warna berdasarkan teks nilai
         function getThemeClass(val) {
             let hash = 0;
             const str = String(val).trim();
@@ -849,7 +788,6 @@
             return `color-theme-${(Math.abs(hash) % 5) + 1}`;
         }
 
-        // Mengatur kelas gaya SIKA berdasarkan jenis izin pekerjaan
         function getSikaClass(val) {
             if (!val) return 'sika-default';
             const lower = val.toLowerCase();
@@ -862,7 +800,6 @@
             return 'sika-default';
         }
 
-        // Fokus ke baris kontraktor tertentu saat pin atau item tabel diklik
         function focusContractor(index) {
             const targetPage = Math.floor(index / rowsPerPage) + 1;
             if (targetPage !== currentRowPage) {
@@ -889,7 +826,6 @@
             }
         }
 
-        // Aksi ketika indikator titik warna diklik
         function handleDotIndicatorClick(index) {
             const role = localStorage.getItem('ft_boyolali_role');
             if (role === 'admin') {
@@ -905,7 +841,6 @@
             activeContractorIndexForColorModal = null;
         }
 
-        // Menyimpan warna baru untuk indikator kontraktor
         function setContractorDotColor(colorName) {
             if (activeContractorIndexForColorModal === null) return;
             const index = activeContractorIndexForColorModal;
@@ -937,7 +872,6 @@
             focusContractor(index);
         }
 
-        // Membuka modal edit pin peta
         function handleMapPinClick(index, subIdx) {
             const role = localStorage.getItem('ft_boyolali_role');
             if (role === 'admin') {
@@ -989,7 +923,6 @@
             focusContractor(contractorIndex);
         }
 
-        // Menyimpan perubahan edit input teks pada baris tabel
         function updateFieldEdit(index, fieldName, value) {
             isUserTypingLocally = false;
             const role = localStorage.getItem('ft_boyolali_role');
@@ -1007,7 +940,6 @@
             if(fieldName === 'jumlah_pekerja') recalculateTotalPekerja();
         }
 
-        // Menyimpan perubahan pada pilihan SIKA Pendukung
         function updateSikaPendukungItem(rowIndex, sikaIndex, value) {
             isUserTypingLocally = false;
             const role = localStorage.getItem('ft_boyolali_role');
@@ -1035,7 +967,6 @@
             isUserTypingLocally = true;
         }
 
-        // Menyesuaikan ukuran tinggi textarea secara otomatis sesuai teks di dalamnya
         function autoResizeTextarea(el) {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight + 2) + 'px';
@@ -1053,7 +984,6 @@
             updateGlobalInfo(type, el.value);
         }
 
-        // Memperbarui posisi koordinat pin pada peta
         function updatePinPosition(index, pinSubIndex, top, left) {
             if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
             if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
@@ -1071,7 +1001,6 @@
             document.getElementById('resetPosBtn').style.display = 'flex';
         }
 
-        // Mengembalikan posisi pin ke pengaturan sebelumnya (Undo posisi)
         function resetAllPositions() {
             if (localStorage.getItem('ft_boyolali_role') !== 'admin') return;
             
@@ -1098,7 +1027,6 @@
             }
         }
 
-        // Mengunduh data terbaru dalam format berkas Excel (.xlsx)
         function downloadUpdatedExcel() {
             const currentRole = localStorage.getItem('ft_boyolali_role');
             if (currentRole === 'vendor' || currentRole === 'tamu') {
@@ -1146,7 +1074,6 @@
             XLSX.writeFile(workbook, "Data_Monitoring_FT_Boyolali_Aktif.xlsx");
         }
 
-        // Menghitung ulang jumlah total pekerja aktif
         function recalculateTotalPekerja() {
             let total = 0;
             document.querySelectorAll('.input-jumlah').forEach(input => {
@@ -1155,7 +1082,6 @@
             document.getElementById('totalPekerjaText').innerText = `Total Pekerja Aktif: ${total} Pekerja`;
         }
 
-        // Navigasi pindah halaman baris tabel (Pagination)
         function ubahHalamanBaris(arah) {
             const totalRows = globalContractorData.length;
             const totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
@@ -1167,7 +1093,6 @@
             processAndRender(globalContractorData);
         }
 
-        // Fungsi utama untuk memproses, merender, dan menampilkan data ke antarmuka web
         function processAndRender(rawJson) {
             const currentScrollPosition = window.scrollY;
 
@@ -1263,7 +1188,7 @@
             setupDropdown('infoSiSelect', allSi, 'si');
             setupDropdown('infoAtSelect', allAt, 'at');
 
-            // Event handler klik peta untuk menambahkan pin baru
+            // --- FITUR UTAMA: KLIK PETA UNTUK TAMBAH PIN BARU DI BARIS KONTRAKTOR AKTIF ---
             mapWrapper.onclick = function(e) {
                 if (currentRole !== 'admin') return;
                 if (e.target !== imgEl && e.target !== mapWrapper) return;
@@ -1274,7 +1199,8 @@
                 const leftPercent = ((x / rect.width) * 100).toFixed(1) + '%';
                 const topPercent = ((y / rect.height) * 100).toFixed(1) + '%';
 
-                const targetContractorIdx = 0; 
+                // Gunakan baris kontraktor pertama pada halaman aktif saat ini sebagai target penambahan pin baru
+                const targetContractorIdx = (currentRowPage - 1) * rowsPerPage; 
                 if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
                 
                 if (!liveDatabaseState.positionHistory) liveDatabaseState.positionHistory = [];
@@ -1396,7 +1322,7 @@
                     `;
                 }
 
-                // Render Baris Tabel Desktop
+                // --- 1. RENDER DESKTOP ROW ---
                 const tr = document.createElement('tr');
                 tr.className = 'contractor-row';
                 tr.id = `row-${index}`;
@@ -1447,7 +1373,7 @@
                 `;
                 tableBodyDesktop.appendChild(tr);
 
-                // Render Kartu Tampilan Mobile (Responsif)
+                // --- 2. RENDER MOBILE CARD (RESPONSIF) ---
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'mobile-contractor-card contractor-row';
                 cardDiv.id = `card-${index}`;
@@ -1507,7 +1433,6 @@
                 tr.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
                 cardDiv.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
 
-                // Render Pin Lokasi pada Peta
                 positionsList.forEach((posCoord) => {
                     const subIdx = posCoord.subIdx;
                     const pin = document.createElement('div');
@@ -1517,7 +1442,6 @@
                     pin.style.left = posCoord.left;
                     pin.innerText = posCoord.pinNumber;
 
-                    // Event interaksi geser (drag) atau klik pada pin peta (Desktop)
                     pin.addEventListener('mousedown', (e) => {
                         e.stopPropagation();
                         e.preventDefault();
@@ -1550,7 +1474,6 @@
                         window.addEventListener('mouseup', onMouseUp);
                     });
 
-                    // Event interaksi sentuh (touch) pada pin peta (Mobile)
                     pin.addEventListener('touchstart', (e) => {
                         e.stopPropagation();
                         if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
