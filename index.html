@@ -1093,6 +1093,120 @@
             processAndRender(globalContractorData);
         }
 
+        // Fungsi pembantu untuk merender pin peta berdasarkan indeks data tertentu
+        function renderPinsForIndex(index, row, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson) {
+            const defaultWarna = row['Warna'] || 'Green';
+            let posObj = customPositions[index];
+            let positionsList = [];
+            
+            if (posObj && typeof posObj === 'object' && !posObj.top) {
+                Object.keys(posObj).forEach(subIdx => {
+                    if (posObj[subIdx]) {
+                        positionsList.push({ 
+                            subIdx: parseInt(subIdx), 
+                            top: posObj[subIdx].top || '50%',
+                            left: posObj[subIdx].left || '50%',
+                            color: posObj[subIdx].color || defaultWarna,
+                            pinNumber: posObj[subIdx].pinNumber !== undefined ? posObj[subIdx].pinNumber : (index + 1)
+                        });
+                    }
+                });
+            } else if (posObj && posObj.top) {
+                positionsList.push({ 
+                    subIdx: 0, 
+                    top: posObj.top, 
+                    left: posObj.left, 
+                    color: posObj[subIdx].color || defaultWarna,
+                    pinNumber: posObj[subIdx].pinNumber !== undefined ? posObj[subIdx].pinNumber : (index + 1) 
+                });
+            } else {
+                positionsList.push({
+                    subIdx: 0,
+                    top: String(row['Posisi Top'] || '50%'),
+                    left: String(row['Posisi Left'] || '50%'),
+                    color: defaultWarna,
+                    pinNumber: index + 1
+                });
+            }
+
+            positionsList.forEach((posCoord) => {
+                const subIdx = posCoord.subIdx;
+                const pin = document.createElement('div');
+                pin.className = `map-pin color-${posCoord.color} map-pin-idx-${index}`;
+                pin.id = `pin-${index}-${subIdx}`;
+                pin.style.top = posCoord.top;
+                pin.style.left = posCoord.left;
+                pin.innerText = posCoord.pinNumber;
+
+                pin.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
+
+                    let isDragging = false;
+                    const startX = e.clientX, startY = e.clientY;
+
+                    const onMouseMove = (ev) => {
+                        ev.stopPropagation();
+                        if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) isDragging = true;
+                        const rect = mapWrapper.getBoundingClientRect();
+                        let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+                        let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
+                        pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
+                        pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
+                    };
+
+                    const onMouseUp = (ev) => {
+                        ev.stopPropagation();
+                        window.removeEventListener('mousemove', onMouseMove);
+                        window.removeEventListener('mouseup', onMouseUp);
+                        if (isDragging) {
+                            updatePinPosition(index, subIdx, pin.style.top, pin.style.left);
+                        } else {
+                            handleMapPinClick(index, subIdx);
+                        }
+                    };
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                });
+
+                pin.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
+
+                    let touch = e.touches[0];
+                    let isDragging = false;
+                    const startX = touch.clientX, startY = touch.clientY;
+
+                    const onTouchMove = (ev) => {
+                        ev.stopPropagation();
+                        let tMove = ev.touches[0];
+                        if (Math.abs(tMove.clientX - startX) > 4 || Math.abs(tMove.clientY - startY) > 4) isDragging = true;
+                        const rect = mapWrapper.getBoundingClientRect();
+                        let x = Math.max(0, Math.min(tMove.clientX - rect.left, rect.width));
+                        let y = Math.max(0, Math.min(tMove.clientY - rect.top, rect.height));
+                        pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
+                        pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
+                    };
+
+                    const onTouchEnd = (ev) => {
+                        ev.stopPropagation();
+                        window.removeEventListener('touchmove', onTouchMove);
+                        window.removeEventListener('touchend', onTouchEnd);
+                        if (isDragging) {
+                            updatePinPosition(index, subIdx, pin.style.top, pin.style.left);
+                        } else {
+                            handleMapPinClick(index, subIdx);
+                        }
+                    };
+                    window.addEventListener('touchmove', onTouchMove);
+                    window.addEventListener('touchend', onTouchEnd);
+                }, {passive: true});
+
+                mapWrapper.appendChild(pin);
+            });
+        }
+
         function processAndRender(rawJson) {
             const currentScrollPosition = window.scrollY;
 
@@ -1188,7 +1302,7 @@
             setupDropdown('infoSiSelect', allSi, 'si');
             setupDropdown('infoAtSelect', allAt, 'at');
 
-            // --- FITUR UTAMA: KLIK PETA UNTUK TAMBAH PIN BARU DI BARIS KONTRAKTOR AKTIF ---
+            // --- KLIK PETA UNTUK TAMBAH PIN BARU DI BARIS KONTRAKTOR AKTIF ---
             mapWrapper.onclick = function(e) {
                 if (currentRole !== 'admin') return;
                 if (e.target !== imgEl && e.target !== mapWrapper) return;
@@ -1199,7 +1313,6 @@
                 const leftPercent = ((x / rect.width) * 100).toFixed(1) + '%';
                 const topPercent = ((y / rect.height) * 100).toFixed(1) + '%';
 
-                // Gunakan baris kontraktor pertama pada halaman aktif saat ini sebagai target penambahan pin baru
                 const targetContractorIdx = (currentRowPage - 1) * rowsPerPage; 
                 if (!liveDatabaseState.customPositions) liveDatabaseState.customPositions = {};
                 
@@ -1241,47 +1354,33 @@
             const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
             const paginatedData = rawJson.slice(startIndex, endIndex);
 
+            // ==========================================
+            // LOGIKA RENDER PIN PETA BERDASARKAN HALAMAN
+            // ==========================================
+            if (currentRowPage === 1) {
+                // Halaman 1: Tampilkan pin secara keseluruhan dari SEMUA data kontraktor
+                rawJson.forEach((rowItem, allIdx) => {
+                    renderPinsForIndex(allIdx, rowItem, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson);
+                });
+            } else {
+                // Halaman 2, 3, dan seterusnya: Hanya tampilkan pin data kontraktor di halaman itu saja
+                paginatedData.forEach((rowItem, paginatedIdx) => {
+                    const actualIdx = startIndex + paginatedIdx;
+                    renderPinsForIndex(actualIdx, rowItem, customPositions, edits, currentRole, mapWrapper, imgEl, rawJson);
+                });
+            }
+
             paginatedData.forEach((row, paginatedIdx) => {
                 const index = startIndex + paginatedIdx;
                 const e = edits[index] || {};
                 const defaultWarna = row['Warna'] || 'Green';
                 
                 let posObj = customPositions[index];
-                let positionsList = [];
-                
-                if (posObj && typeof posObj === 'object' && !posObj.top) {
-                    Object.keys(posObj).forEach(subIdx => {
-                        if (posObj[subIdx]) {
-                            positionsList.push({ 
-                                subIdx: parseInt(subIdx), 
-                                top: posObj[subIdx].top || '50%',
-                                left: posObj[subIdx].left || '50%',
-                                color: posObj[subIdx].color || defaultWarna,
-                                pinNumber: posObj[subIdx].pinNumber !== undefined ? posObj[subIdx].pinNumber : (index + 1)
-                            });
-                        }
-                    });
-                } else if (posObj && posObj.top) {
-                    positionsList.push({ 
-                        subIdx: 0, 
-                        top: posObj.top, 
-                        left: posObj.left, 
-                        color: posObj.color || defaultWarna,
-                        pinNumber: posObj.pinNumber !== undefined ? posObj.pinNumber : (index + 1) 
-                    });
-                } else {
-                    positionsList.push({
-                        subIdx: 0,
-                        top: String(row['Posisi Top'] || '50%'),
-                        left: String(row['Posisi Left'] || '50%'),
-                        color: defaultWarna,
-                        pinNumber: index + 1
-                    });
-                }
-
                 let tableDotColor = defaultWarna;
-                const foundBase = positionsList.find(p => p.subIdx === 0);
-                if (foundBase) tableDotColor = foundBase.color;
+                if (posObj) {
+                    if (posObj[0] && posObj[0].color) tableDotColor = posObj[0].color;
+                    else if (posObj.color) tableDotColor = posObj.color;
+                }
 
                 const kontraktor = e.kontraktor !== undefined ? e.kontraktor : (row['Nama Kontraktor'] || '');
                 const judul = e.judul !== undefined ? e.judul : (row['Judul Pekerjaan'] || '');
@@ -1322,7 +1421,7 @@
                     `;
                 }
 
-                // --- 1. RENDER DESKTOP ROW ---
+                // --- RENDER DESKTOP ROW ---
                 const tr = document.createElement('tr');
                 tr.className = 'contractor-row';
                 tr.id = `row-${index}`;
@@ -1373,7 +1472,7 @@
                 `;
                 tableBodyDesktop.appendChild(tr);
 
-                // --- 2. RENDER MOBILE CARD (RESPONSIF) ---
+                // --- RENDER MOBILE CARD ---
                 const cardDiv = document.createElement('div');
                 cardDiv.className = 'mobile-contractor-card contractor-row';
                 cardDiv.id = `card-${index}`;
@@ -1432,83 +1531,6 @@
 
                 tr.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
                 cardDiv.querySelectorAll('.uraian-textarea').forEach(ta => autoResizeTextarea(ta));
-
-                positionsList.forEach((posCoord) => {
-                    const subIdx = posCoord.subIdx;
-                    const pin = document.createElement('div');
-                    pin.className = `map-pin color-${posCoord.color} map-pin-idx-${index}`;
-                    pin.id = `pin-${index}-${subIdx}`;
-                    pin.style.top = posCoord.top;
-                    pin.style.left = posCoord.left;
-                    pin.innerText = posCoord.pinNumber;
-
-                    pin.addEventListener('mousedown', (e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
-
-                        let isDragging = false;
-                        const startX = e.clientX, startY = e.clientY;
-
-                        const onMouseMove = (ev) => {
-                            ev.stopPropagation();
-                            if (Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) isDragging = true;
-                            const rect = mapWrapper.getBoundingClientRect();
-                            let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
-                            let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
-                            pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
-                            pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
-                        };
-
-                        const onMouseUp = (ev) => {
-                            ev.stopPropagation();
-                            window.removeEventListener('mousemove', onMouseMove);
-                            window.removeEventListener('mouseup', onMouseUp);
-                            if (isDragging) {
-                                updatePinPosition(index, subIdx, pin.style.top, pin.style.left);
-                            } else {
-                                handleMapPinClick(index, subIdx);
-                            }
-                        };
-                        window.addEventListener('mousemove', onMouseMove);
-                        window.addEventListener('mouseup', onMouseUp);
-                    });
-
-                    pin.addEventListener('touchstart', (e) => {
-                        e.stopPropagation();
-                        if (currentRole === 'tamu' || currentRole === 'vendor') { focusContractor(index); return; }
-
-                        let touch = e.touches[0];
-                        let isDragging = false;
-                        const startX = touch.clientX, startY = touch.clientY;
-
-                        const onTouchMove = (ev) => {
-                            ev.stopPropagation();
-                            let tMove = ev.touches[0];
-                            if (Math.abs(tMove.clientX - startX) > 4 || Math.abs(tMove.clientY - startY) > 4) isDragging = true;
-                            const rect = mapWrapper.getBoundingClientRect();
-                            let x = Math.max(0, Math.min(tMove.clientX - rect.left, rect.width));
-                            let y = Math.max(0, Math.min(tMove.clientY - rect.top, rect.height));
-                            pin.style.left = ((x / rect.width) * 100).toFixed(1) + '%';
-                            pin.style.top = ((y / rect.height) * 100).toFixed(1) + '%';
-                        };
-
-                        const onTouchEnd = (ev) => {
-                            ev.stopPropagation();
-                            window.removeEventListener('touchmove', onTouchMove);
-                            window.removeEventListener('touchend', onTouchEnd);
-                            if (isDragging) {
-                                updatePinPosition(index, subIdx, pin.style.top, pin.style.left);
-                            } else {
-                                handleMapPinClick(index, subIdx);
-                            }
-                        };
-                        window.addEventListener('touchmove', onTouchMove);
-                        window.addEventListener('touchend', onTouchEnd);
-                    }, {passive: true});
-
-                    mapWrapper.appendChild(pin);
-                });
             });
 
             document.getElementById('btnRowPrev').disabled = currentRowPage === 1;
